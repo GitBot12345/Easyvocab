@@ -143,6 +143,8 @@ function migrate(){
   if(P.qlen!==undefined){P.quizLength=nearest(P.qlen,[5,10,15,20]);P.flashcardCount=nearest(P.qlen,[5,10,15,20,30]);delete P.qlen;ch=true;}
   if(P.speak===0||P.speak===1){P.speak=!!P.speak;ch=true;}
   delete P.theme;delete P.size;
+  if(P.owned&&P.owned['🚀']){P.owned['🦘']=true;delete P.owned['🚀'];ch=true;}
+  if(P.avatar==='🚀'){P.avatar='🦘';ch=true;}
   {const mp={sun:'sand',sage:'forest',berry:'clay'};if(mp[P.bg]){P.bg=mp[P.bg];ch=true;}if(P.bg==='stone'){P.bg='ice';if(P.look==='vivid')P.look='natural';ch=true;}}
   P.v=4;if(ch)save();
 }
@@ -511,8 +513,8 @@ function renderInner(keep){
   const s=S.screen;
   if(s==='menu')v=menuView();else if(s==='practice')v=practiceView();else if(s==='onb')v=onbView();else if(s==='pickdir')v=pickView();else if(s==='learn')v=learnView();
   else if(s==='quiz')v=quizView();else if(s==='nodue')v=nodueView();else if(s==='words')v=wordsView();else if(s==='add')v=addView();
-  else if(s==='planner')v=plannerView();else if(s==='stats')v=statsView();else if(s==='settings')v=settingsView();else if(s==='shop')v=shopView();else if(s==='profile')v=profileView();else if(s==='pet')v=petView();else if(s==='legal')v=legalView();else if(s==='word')v=wordView();else if(s==='game')v=gameView();else if(s==='feedback')v=feedbackView();else v=resultView();
-  app.innerHTML=header()+'<main class="'+(S.anim||'')+((s==='practice')?' tall':'')+((s==='menu')?' home':'')+((s==='quiz'||s==='learn')?' qz':'')+((s==='stats')?' stats':'')+'">'+v+'</main>'+(showBar()?'<footer class="legalf"><button class="link" data-act="legal" data-v="imp">Impressum</button><span>·</span><button class="link" data-act="legal" data-v="dat">Datenschutz</button></footer>'+tabBar():'');
+  else if(s==='planner')v=plannerView();else if(s==='stats')v=statsView();else if(s==='settings')v=settingsView();else if(s==='shop')v=shopView();else if(s==='profile')v=profileView();else if(s==='pet')v=petView();else if(s==='legal')v=legalView();else if(s==='feed')v=feedView();else if(s==='word')v=wordView();else if(s==='game')v=gameView();else if(s==='feedback')v=feedbackView();else v=resultView();
+  app.innerHTML=header()+'<main class="'+(S.anim||'')+((s==='practice')?' tall':'')+((s==='menu')?' home':'')+((s==='quiz'||s==='learn')?' qz':'')+((s==='stats')?' stats':'')+((s==='feed')?' feedm':'')+'">'+v+'</main>'+(showBar()?'<footer class="legalf"><button class="link" data-act="legal" data-v="imp">Impressum</button><span>·</span><button class="link" data-act="legal" data-v="dat">Datenschutz</button></footer>'+tabBar():'');
   S.anim='';
   (function(){const prev=LASTSCR;LASTSCR=s;if(!prev||prev===s)return;if(prev==='onb'||s==='onb')return;const mn=document.querySelector('main');if(!mn)return;
     if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
@@ -535,6 +537,7 @@ function renderInner(keep){
   pillInit();
   segInit();
   ctUpdate();
+  if(s==='feed')feedInit();
 }
 function bName(b){
   if(b==='all')return 'Alle Listen';if(b==='weak')return 'Schwache Wörter';
@@ -555,8 +558,11 @@ function ring(p){
   const c=188.5;
   return '<svg class="ring" viewBox="0 0 72 72" aria-hidden="true"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--g1)"/><stop offset="1" style="stop-color:var(--g2)"/></linearGradient></defs><circle class="rt" cx="36" cy="36" r="30"/><circle class="rf" cx="36" cy="36" r="30" stroke-dasharray="'+c+'" stroke-dashoffset="'+(c*(1-p/100)).toFixed(1)+'" transform="rotate(-90 36 36)"/></svg>';
 }
-const TIPS=['Erst überlegen, dann umdrehen. Erinnern bringt mehr als nochmal Ansehen.','Kurz und oft schlägt lang und selten. Lieber 10 Minuten täglich als eine Stunde am Vorabend.','Abends zu wiederholen kann helfen, weil das Gehirn im Schlaf festigt. Die Belege sind aber gemischt.','Sprich das Wort laut aus, auch wenn es niemand hört. Das gibt dem Wort einen zweiten Weg ins Gedächtnis.','Lerne Wörter im Satz. Ein Beispielsatz hilft mehr als das Wort allein.','Fehler sind nützlich. Wörter, die du falsch hattest, merkst du dir nach der Korrektur oft besser.','Mische die Reihenfolge. Wörter aus verschiedenen Listen abwechselnd zu üben fühlt sich schwerer an, wirkt aber besser.','Teste dich vor dem Test einmal ohne Hilfe. So siehst du ehrlich, wo du stehst.'];
-function tipCard(){const d=new Date();const n=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5);return '<div class="glass pad w fill-extra"><div class="hd2"><span class="lab">💡 Lerntipp</span></div><p style="margin:2px 0 0">'+esc(TIPS[n%TIPS.length])+'</p></div>';}
+const TIPS=['Erst überlegen, dann umdrehen. Erinnern bringt mehr als nochmal Ansehen.','Kurz und oft schlägt lang und selten. Lieber 10 Minuten täglich als eine Stunde am Vorabend.','Abends zu wiederholen kann helfen, weil das Gehirn im Schlaf festigt. Die Belege sind aber gemischt.','Sprich das Wort laut aus, auch wenn es niemand hört. Das gibt dem Wort einen zweiten Weg ins Gedächtnis.','Lerne Wörter im Satz. Ein Beispielsatz hilft mehr als das Wort allein.','Fehler sind nützlich. Wörter, die du falsch hattest, merkst du dir nach der Korrektur oft besser.','Mische die Reihenfolge. Wörter aus verschiedenen Listen abwechselnd zu üben fühlt sich schwerer an, wirkt aber besser.','Teste dich vor dem Test einmal ohne Hilfe. So siehst du ehrlich, wo du stehst.','Sprich Wörter laut aus. Dein Gehirn merkt sich Gehörtes besser als Gelesenes.','Lerne Wörter in Sätzen, nicht allein. Der Zusammenhang hilft beim Erinnern.','Mach nach 25 Minuten eine kurze Pause. Danach sitzen die Wörter besser.','Fehler sind gut. Ein Wort, das du einmal falsch hattest, merkst du dir oft länger.','Schreibe schwere Wörter von Hand auf. Das Schreiben hilft dem Gedächtnis.','Verknüpfe ein Wort mit einem Bild im Kopf. Je witziger, desto besser bleibt es hängen.','Wiederhole kurz vor dem Schlafen. Im Schlaf festigt dein Gehirn das Gelernte.','Lerne ähnlich klingende Wörter nicht am selben Tag. Sonst verwechselst du sie leichter.','Teste dich selbst, statt nur zu lesen. Abfragen ist die stärkste Lernmethode.','Setze dir ein kleines Tagesziel. Lieber jeden Tag 10 Wörter als einmal 70.','Erkläre ein Wort einem Freund. Wer erklärt, behält mehr.','Achte auf Wortfamilien, zum Beispiel to approach und approach. Ein Wort bringt dir zwei.','Schlechter Tag? Übe nur die schwachen Wörter. Fünf Minuten zählen auch.','Nutze Eselsbrücken. Je persönlicher, desto besser.'];
+let TIPI=Math.floor(Math.random()*TIPS.length);
+function tipCard(){return '<div class="glass pad w fill-extra tipc" data-act="nexttip" role="button" aria-label="Nächster Lerntipp"><div class="hd2"><span class="lab">💡 Lerntipp</span><span class="hint">Tippen für den nächsten ›</span></div><p id="tipt" style="margin:2px 0 0">'+esc(TIPS[TIPI%TIPS.length])+'</p></div>';}
+function tipNext(){TIPI=(TIPI+1)%TIPS.length;const el=document.getElementById('tipt');if(!el)return;el.classList.add('tfade');setTimeout(function(){const e2=document.getElementById('tipt');if(e2){e2.textContent=TIPS[TIPI];e2.classList.remove('tfade');}},200);}
+setInterval(function(){if(!document.hidden&&document.getElementById('tipt'))tipNext();},12000);
 function weekStrip(){const st=weekStart(0);const L=['Mo','Di','Mi','Do','Fr','Sa','So'];const today=fmt(new Date());let n=0;let h='<div class="wkrow">';
   for(let i=0;i<7;i++){const d=new Date(st);d.setDate(st.getDate()+i);const k=fmt(d);const on=(P.days[k]>0)||(P.frozen&&P.frozen[k]);if(on)n++;h+='<div class="wkd'+(on?' on':'')+(k===today?' td':'')+'"><i>'+(on?'✓':'')+'</i><small>'+L[i]+'</small></div>';}
   return '<div class="glass pad w col tight fill-extra"><div class="hd2"><span class="lab">Diese Woche</span><span class="hint">'+n+' von 7 Tagen</span></div>'+h+'</div></div>';}
@@ -663,7 +669,7 @@ function mkEndCard(g){
 }
 function miniView(g){
   const id=g.ids[g.i];
-  const title={salat:'Wortsalat',galgen:'Wörter raten',diktat:'Diktat'}[g.type];
+  const title={salat:'Wortsalat',galgen:'Galgenmännchen',diktat:'Diktat'}[g.type];
   let h='<div class="pt"><h1>'+title+'</h1></div>';
   if(g.over)return h+mkEndCard(g);
   h+='<div class="cnt cnt2"><span>Richtig: '+g.score+'</span><span>Wort '+(g.i+1)+' von '+g.ids.length+'</span></div>';
@@ -727,6 +733,59 @@ function startGame(type){
   if(!S.gs)S.gs={src:'mix',list:0,dikt:'end',mean:'off',rep:'1',n:{mem:6,blitz:40,pod:8,story:8,clip:8,salat:8,galgen:8,diktat:8},tempo:'normal',expl:'on'};
   S.game={type:type,setup:true};setFrom();S.screen='game';render();
 }
+
+/* ===== Lern-Feed: scrollen und dabei lernen ===== */
+function startFeed(){
+  const pool=allIds();
+  const weak=shuffle(pool.filter(function(id){return (P.wrong[id]||0)>0;})).slice(0,12);
+  const due=shuffle(dueOf(pool,true));const rest=shuffle(pool);
+  const seen={},out=[];[].concat(weak,due,rest).forEach(function(id){if(!seen[id]&&out.length<40){seen[id]=1;out.push(id);}});
+  if(out.length<3){toast('Dafür gibt es noch zu wenige Wörter.');return;}
+  setFrom();S.feed={ids:out,done:{},ok:0,no:0,xp:0,rw:null,rewarded:false};S.screen='feed';render();
+}
+function feedView(){
+  const f=S.feed;if(!f)return '<div class="glass pad w center">Hier gibt es keine Karten. Starte den Lern-Feed unter Üben.</div>';
+  let h='<div id="feed" class="feed" role="list" aria-label="Lern-Feed">';
+  f.ids.forEach(function(id,i){const wl=wlang(id);const ex=E[id]||'';const d=f.done[i];
+    h+='<section class="fc" role="listitem"><div class="fcard glass'+(d?(d===1?' okd rev':' nod rev'):'')+'" data-act="feedrev" data-i="'+i+'">'
+      +'<div class="ftop"><span class="fpill">'+(i+1)+' / '+f.ids.length+'</span><span class="fpill soft">'+esc(LNAME[wl]||'Englisch')+'</span></div>'
+      +'<div class="fmid"><div class="fword'+(W[id][0].length>22?' sm':'')+'">'+esc(W[id][0])+'</div>'+emoBlock(id,'learn')
+      +'<div class="fans"><div class="ftr">'+esc(W[id][1])+'</div>'+(ex?'<div class="fex">'+esc(ex)+'</div>':'')+'</div></div>'
+      +'<div class="fhint">Tippen zum Aufdecken</div>'
+      +'<div class="frate"><button class="btn" data-act="feedans" data-i="'+i+'" data-v="0">Noch nicht</button><button class="btn pri" data-act="feedans" data-i="'+i+'" data-v="1">Wusste ich</button></div>'
+      +(canSpeakW(id)?'<button class="fspk" data-act="feedspk" data-id="'+id+'" aria-label="Anhören">🔊</button>':'')
+      +(i===0?'<div class="fswipe" aria-hidden="true">▲ Nach oben wischen für das nächste Wort</div>':'')
+      +'</div></section>';});
+  h+='<section class="fc"><div class="fcard glass fend" id="fend">'+feedEndHtml()+'</div></section></div>';
+  return h;
+}
+function feedEndHtml(){
+  const f=S.feed;if(!f)return '';const n=f.ok+f.no;
+  return '<div class="fmid"><div class="big-ico">🎉</div><div class="fword sm">Geschafft</div><p class="hint" style="margin:6px 0">'+(n?f.ok+' gewusst · '+f.no+' nochmal üben':'Du hast keine Karte bewertet. Beim nächsten Mal tippst du auf „Wusste ich“ oder „Noch nicht“, dann merkt sich die App deinen Stand.')+'</p>'
+    +(f.rw?'<p class="hint" style="margin:2px 0">'+(f.rw.capped?'Für heute gibt es keine Belohnung mehr. Lernen darfst du trotzdem.':'+'+f.rw.xp+' XP und +'+f.rw.coins+' 🪙')+'</p>':'')
+    +'</div><div class="frate show"><button class="btn pri full" data-act="feedagain">Nochmal</button><button class="btn full" data-act="back">Fertig</button></div>';
+}
+function feedInit(){
+  const el=document.getElementById('feed');if(!el)return;
+  const fit=function(){const e=document.getElementById('feed');const hd=document.querySelector('.hdr');if(!e||!hd)return;const top=hd.getBoundingClientRect().bottom;e.style.height=Math.max(320,window.innerHeight-top-14)+'px';};
+  fit();setTimeout(fit,120);
+  if(!window.__feedFit){window.__feedFit=1;window.addEventListener('resize',function(){if(S.screen==='feed')fit();});}
+  if(window.IntersectionObserver){const end=document.getElementById('fend');if(end){const io=new IntersectionObserver(function(en){en.forEach(function(x){const f=S.feed;if(x.isIntersecting&&x.intersectionRatio>0.6&&f&&!f.rewarded){f.rewarded=true;if(f.ok+f.no>0){f.rw=gameReward(Math.min(30,6+f.ok),2);save();}const t=document.getElementById('fend');if(t)t.innerHTML=feedEndHtml();}});},{root:el,threshold:[0.6]});io.observe(end);}}
+}
+function memTimer(g){
+  g.t0=Date.now();
+  if(g.limit){g.iv=setInterval(function(){if(S.screen!=='game'||S.game!==g||g.over){clearInterval(g.iv);return;}g.left--;const el=document.getElementById('mt');if(el)el.textContent=g.left;if(g.left<=0){clearInterval(g.iv);g.over=true;g.lost=true;g.tEnd=Date.now();render(true);}},1000);}
+}
+function memEndPeek(g){
+  if(!g.peeking)return;g.peeking=false;if(g.pv)clearInterval(g.pv);
+  memTimer(g);if(S.screen==='game'&&S.game===g){haptic('tap');render(true);}
+}
+function memStart(g,secs){
+  if(secs>0){
+    g.peeking=true;g.peek=secs;
+    g.pv=setInterval(function(){if(S.screen!=='game'||S.game!==g){clearInterval(g.pv);return;}g.peek--;const el=document.getElementById('pk');if(el)el.textContent=g.peek;if(g.peek<=0)memEndPeek(g);},1000);
+  }else memTimer(g);
+}
 function beginGame(type){
   const gs=S.gs;const n=gs.n[type];const src=gs.src,list=gs.list;
   if(type==='mem'){
@@ -734,7 +793,7 @@ function beginGame(type){
     if(ids.length<4){toast(emo?'Zu wenige Wörter mit Emoji in dieser Auswahl.':'Dafür gibt es hier zu wenige Wörter. Wähle eine andere Quelle.');return;}
     let cards=[];ids.forEach(function(id){cards.push({id:id,f:true,open:false,done:false});cards.push({id:id,f:false,open:false,done:false});});
     const g={type:'mem',emo:emo,cards:shuffle(cards),first:-1,lock:false,moves:0,t0:Date.now(),over:false,limit:(gs.mode==='timed')?Math.max(40,ids.length*12):0};g.left=g.limit;S.game=g;
-    if(g.limit){g.iv=setInterval(function(){if(S.screen!=='game'||S.game!==g||g.over){clearInterval(g.iv);return;}g.left--;const el=document.getElementById('mt');if(el)el.textContent=g.left;if(g.left<=0){clearInterval(g.iv);g.over=true;g.lost=true;g.tEnd=Date.now();render(true);}},1000);}
+    memStart(g,parseInt(gs.peek==null?'5':gs.peek,10)||0);
   } else if(type==='blitz'){
     const ids=gameIds(n,src,list);if(ids.length<6){toast('Dafür gibt es hier zu wenige Wörter. Wähle eine andere Quelle.');return;}
     const g={type:'blitz',pool:ids,t:60,score:0,combo:0,max:0,over:false,flash:'',q:null};g.q=blitzQ(g);S.game=g;
@@ -761,6 +820,7 @@ function setupView(type){
   if(type==='mem'){
     h+=srow('🧩','#FF6B8B','Kartenpaare','',segc('variant',['trans','emoji'],gs.variant||'trans',{trans:'Wort + Übersetzung',emoji:'Wort + Emoji'},'gset'));
     h+=srow('⏱️','#FF9500','Spielart','',segc('mode',['calm','timed'],gs.mode||'calm',{calm:'Entspannt',timed:'Auf Zeit'},'gset'));
+    h+=srow('👀','#5AC8FA','Vorschau','Alle Karten kurz zeigen, dann geht es los',segc('peek',['0','5','10'],String(gs.peek==null?'5':gs.peek),{0:'Aus',5:'5 s',10:'10 s'},'gset'));
   }
   if(type==='diktat'){
     h+=srow('⏱️','#A2845E','Tempo','Wie schnell gesprochen wird',segc('tempo',['slow','normal','fast'],gs.tempo,{slow:'Ruhig',normal:'Normal',fast:'Flott'},'gset'));
@@ -804,7 +864,8 @@ function gameView(){
   if(g.type==='mem'){
     const done=g.cards.filter(function(c){return c.done;}).length;
     let h='<div class="pt"><h1>Memory</h1><small>Finde die Paare: Wort und Übersetzung</small></div><div class="cnt cnt2"><span>Züge: '+g.moves+(g.limit?' · ⏱ <b id="mt">'+g.left+'</b> s':'')+'</span><span>'+(done/2)+' von '+(g.cards.length/2)+' Paaren</span></div>';
-    h+='<div class="memgrid'+(g.cards.length>20?' big':'')+'">'+g.cards.map(function(c,i){const txt=c.f?gEn(c.id):(g.emo?emojiOf(c.id):gShort(W[c.id][1]));const show=c.open||c.done;return '<button class="mc'+(c.done?' done':'')+(show?' up':'')+'" data-act="memtap" data-i="'+i+'" aria-label="'+(show?esc(txt):'Karte')+'"><span>'+(show?esc(txt):'?')+'</span></button>';}).join('')+'</div>';
+    if(g.peeking)h+='<div class="glass pad w peekbar"><span>👀 Merk dir die Karten: noch <b id="pk">'+g.peek+'</b> s</span><button class="btn sm pri" data-act="peekskip">Los geht\'s</button></div>';
+    h+='<div class="memgrid'+(g.cards.length>20?' big':'')+(g.peeking?' peeking':'')+'">'+g.cards.map(function(c,i){const txt=c.f?gEn(c.id):(g.emo?emojiOf(c.id):gShort(W[c.id][1]));const show=c.open||c.done||g.peeking;return '<button class="mc'+(c.done?' done':'')+(show?' up':'')+'" data-act="memtap" data-i="'+i+'" aria-label="'+(show?esc(txt):'Karte')+'"><span>'+(show?esc(txt):'?')+'</span></button>';}).join('')+'</div>';
     if(g.over&&g.lost){h+='<div class="glass pad w col center"><div class="big-ico">⏰</div><b>Zeit abgelaufen</b><div class="hint">Du hast '+(done/2)+' von '+(g.cards.length/2)+' Paaren gefunden. Das nächste Mal klappt es.</div><button class="btn pri full" data-act="gostart" data-v="mem">Nochmal</button></div>';}else if(g.over){const sec=Math.round((g.tEnd-g.t0)/1000);h+='<div class="glass pad w col center"><div class="big-ico">🎉</div><b>Geschafft in '+g.moves+' Zügen und '+sec+' Sekunden</b>'+(g.rw?'<div class="hint">'+(g.rw.capped?'Für heute gibt es keine Belohnung mehr. Spielen darfst du trotzdem.':'+'+g.rw.xp+' XP und +'+g.rw.coins+' 🪙')+'</div>':'')+'<button class="btn pri full" data-act="gostart" data-v="mem">Nochmal</button></div>';}
     return h;
   }
@@ -872,7 +933,7 @@ function practiceView(){
   ['learn','auto','cards','mc','type','weak'].forEach(function(k){const m=MODE[k];
     h+='<button class="glass gtap tile v" data-act="tile" data-k="'+k+'"><span class="ico">'+m.i+'</span><span class="tt"><b>'+m.t+'</b><small>'+m.d+'</small></span></button>';});
   h+='</div><div class="pt" style="padding-top:2px"><span class="lab">Spaß und Spiele</span></div><div class="grid mini">';
-  [['mem','🃏','Memory','Paare finden'],['blitz','⚡','Blitz','60 Sekunden'],['salat','🔤','Wortsalat','Buchstaben ordnen'],['galgen','🎯','Wörter raten','Buchstabe für Buchstabe'],['diktat','🎧','Diktat','Hören und schreiben'],['clip','🎬','Lern-Clip','Wörter animiert erklärt'],['pod','🎙️','Mini-Podcast','Gespräch mit KI'],['story','📖','Geschichte','Text mit KI']].forEach(function(g){h+='<button class="glass gtap tile v" data-act="game" data-v="'+g[0]+'"><span class="ico">'+g[1]+'</span><span class="tt"><b>'+g[2]+'</b><small>'+g[3]+'</small></span></button>';});
+  [['feed','📱','Lern-Feed','Scrollen und dabei lernen'],['mem','🃏','Memory','Paare finden'],['blitz','⚡','Blitz','60 Sekunden'],['salat','🔤','Wortsalat','Buchstaben ordnen'],['galgen','🎯','Galgenmännchen','Buchstabe für Buchstabe'],['diktat','🎧','Diktat','Hören und schreiben'],['clip','🎬','Lern-Clip','Wörter animiert erklärt'],['pod','🎙️','Mini-Podcast','Gespräch mit KI'],['story','📖','Geschichte','Text mit KI']].forEach(function(g){h+='<button class="glass gtap tile v" data-act="game" data-v="'+g[0]+'"><span class="ico">'+g[1]+'</span><span class="tt"><b>'+g[2]+'</b><small>'+g[3]+'</small></span></button>';});
   h+='</div>';
   h+=listsCard()+tipCard();
   return h;
@@ -1074,11 +1135,11 @@ function plannerView(){
 }
 function levelInfo(pairs){const lvl=1+Math.floor(pairs/10);const into=pairs%10;const titles=['Neuling','Entdecker','Sammler','Könner','Profi','Meister','Legende'];return {lvl:lvl,into:into,pct:into*10,title:titles[Math.min(6,Math.floor((lvl-1)/2))]};}
 const FREEZE_COST=40,BOOST_COST=60,AV_COST=25;
-const AVATARS=['🐱','🐶','🐰','🐸','🐻','🐯','🦝','🐨','🦥','🐝','🐹','🦖','🦈','🦩','🚀','🐲'];
-const AVPRICE={'🦖':40,'🦈':40,'🦩':40,'🚀':60,'🐲':90};
+const AVATARS=['🐱','🐶','🐰','🐸','🐻','🐯','🦝','🐨','🦥','🐝','🐹','🦖','🦈','🦩','🦘','🐲','🦦','🦙','🦜','🐘'];
+const AVPRICE={'🦖':40,'🦈':40,'🦩':40,'🐲':90,'🦜':40,'🐘':60};
 function avPrice(a){return AVPRICE[a]||25;}
 const WEEKLY=['🦊','🐼','🦉','🐙','🦄','🐢','🦋','🐳','🦁','🐧','🦒','🦔'];
-const AVNAME={'🐱':'Mimi','🐶':'Bello','🐰':'Hoppel','🐸':'Quaki','🐻':'Brummi','🐯':'Tigo','🦝':'Raffi','🐨':'Koko','🦥':'Lento','🐝':'Summsi','🐹':'Pummel','🦖':'Rexi','🦈':'Finn','🦩':'Flora','🚀':'Zippo','🐲':'Draki','🦊':'Schlaufox','🐼':'Bambu','🦉':'Hugo','🐙':'Okki','🦄':'Funki','🐢':'Schlurfi','🦋':'Flatter','🐳':'Wally','🦁':'Leo','🐧':'Pingo','🦒':'Gigi','🦔':'Pieks'};
+const AVNAME={'🐱':'Felix','🐶':'Hachi','🐰':'Peter','🐸':'Kermit','🐻':'Baloo','🐯':'Tigger','🦝':'Meeko','🐨':'Blinky','🦥':'Sid','🐝':'Maja','🐹':'Hamtaro','🦖':'Rexy','🦈':'Bruce','🦩':'Pinky','🦘':'Skippy','🐲':'Fafnir','🦦':'Tarka','🦙':'Kuzco','🦜':'Iago','🐘':'Dumbo','🦊':'Schlaufox','🐼':'Po','🦉':'Hedwig','🐙':'Paul','🦄':'Amalthea','🐢':'Franklin','🦋':'Flatter','🐳':'Willy','🦁':'Simba','🐧':'Pingu','🦒':'Melman','🦔':'Mecki'};
 const XPB_COST=80;
 const AVINFO={
 '🐱':['Neugierige Katze. Liebt Sonnenplätze und lernt am liebsten morgens.','Miau!',1.7],
@@ -1095,7 +1156,7 @@ const AVINFO={
 '🦖':['Kleiner Dino. Kennt die ältesten Wörter der Welt.','Rooaar!',0.3],
 '🦈':['Schneller Hai. Schwimmt durch jede Liste, ohne anzuhalten.','Dum dum, dum dum!',0.4],
 '🦩':['Eleganter Flamingo. Lernt auf einem Bein und trotzdem sicher.','Honk honk!',1.2],
-'🚀':['Mutige Rakete. Startet mit dir zum nächsten Level.','Drei, zwei, eins, los!',1.0],
+'🦘':['Sprunggewaltiges Känguru. Hüpft von Liste zu Liste, ohne Pause.','Boing, boing!',1.8],
 '🐲':['Weiser Drache. Hütet die schwersten Wörter im ganzen Land.','Fauch!',0.3],
 '🦊':['Cleverer Schlaufox. Findet immer den kürzesten Weg zum richtigen Wort.','Ring ding ding!',1.3],
 '🐼':['Ruhiger Panda. Kaut Bambus und Vokabeln in aller Ruhe.','Mampf mampf!',0.8],
@@ -1107,8 +1168,12 @@ const AVINFO={
 '🐳':['Riesiger Wal. Singt dir die Vokabeln in den Schlaf.','Uuuuh!',0.3],
 '🦁':['Stolzer Löwe. Brüllt, wenn du dein Tagesziel erreichst.','Roaar!',0.4],
 '🐧':['Cooler Pinguin. Rutscht auf dem Bauch durch jede Prüfung.','Pinga pinga!',1.0],
-'🦒':['Hoher Gigi. Sieht die Antwort schon, bevor die Frage fertig ist.','Hallo von da oben!',0.9],
-'🦔':['Stacheliger Pieks. Rollt sich ein, wenn die Wörter zu schwer werden.','Pieks pieks!',1.5]};
+'🦒':['Hohe Giraffe. Sieht die Antwort schon, bevor die Frage fertig ist.','Hallo von da oben!',0.9],
+'🦔':['Stacheliger Igel. Rollt sich ein, wenn die Wörter zu schwer werden.','Pieks pieks!',1.5],
+'🦦':['Verspielter Otter. Hält beim Lernen sein Lieblingswort ganz fest.','Fiep fiep!',1.5],
+'🦙':['Gelassenes Lama. Bleibt ruhig, auch wenn die Liste lang ist.','Hmmm, hmmm!',0.8],
+'🦜':['Plappernder Papagei. Spricht jedes Wort nach, bis es sitzt.','Hallo, hallo!',1.8],
+'🐘':['Elefant mit gutem Gedächtnis. Vergisst kein einziges Wort.','Törööö!',0.3]};
 function hungerLvl(){if(!P.avatar)return -1;const h=(Date.now()-(P.fedAt||Date.now()))/36e5;return h<24?0:(h<48?1:2);}
 function petName(a){return AVNAME[a]||'Dein Tier';}
 function hearts(){const box=document.querySelector('.petbox');if(!box)return;for(let k=0;k<4;k++){const i=document.createElement('i');i.className='heart';i.textContent=['❤️','💛','💚','✨'][k%4];i.style.left=(38+Math.random()*24)+'%';i.style.animationDelay=(k*0.12)+'s';box.appendChild(i);setTimeout(function(){if(i.parentNode)i.parentNode.removeChild(i);},1600);}}
@@ -1262,7 +1327,7 @@ function settingsView(){
   dat+=srow('♻️','#FF9F0A','Fortschritt zurücksetzen','Eigene Wörter und Klausuren bleiben','<button class="btn bad sm" data-act="reset">'+(S.confirmReset?'Wirklich löschen':'Zurücksetzen')+'</button>')+srow('🗑️','#FF3B30','Alle Daten löschen','Entfernt alles von diesem Gerät. Nicht rückgängig zu machen.','<button class="btn bad sm" data-act="wipe">'+(S.confirmWipe?'Sicher?':'Löschen')+'</button>');
   h+=sect('Daten',dat,'Speichere die Sicherung in einer Notiz. Sie enthält Fortschritt, Klausuren und eigene Wörter.');
   h+=sect('Hilfe und Info',srow('💬','#34C759','Feedback senden','Fehler melden oder Idee teilen','<button class="btn sm" data-act="fbopen">Öffnen</button>')+srow('📖','#8E8E93','Tutorial','Kurze Einführung','<button class="btn sm" data-act="tutorial">Ansehen</button>')+srow('❓','#34C759','Hilfe und Fragen','Häufige Fragen','<button class="btn sm" data-act="legal" data-v="faq">Öffnen</button>')+srow('🏷️','#8E8E93','Impressum','Wer hinter der App steht','<button class="btn sm" data-act="legal" data-v="imp">Öffnen</button>')+srow('🔒','#0A84FF','Datenschutz','Welche Daten wohin gehen','<button class="btn sm" data-act="legal" data-v="dat">Öffnen</button>')+srow('📄','#8E8E93','Nutzungsbedingungen','Regeln und Haftung','<button class="btn sm" data-act="legal" data-v="agb">Öffnen</button>')+srow('🙏','#FF9F0A','Über EasyVocab','Lernmethode und Danksagung','<button class="btn sm" data-act="legal" data-v="ueber">Öffnen</button>'));
-  h+='</div><p class="hint" style="text-align:center;margin:8px 0">EasyVocab · Version 71 · 1.11.2026</p>';
+  h+='</div><p class="hint" style="text-align:center;margin:8px 0">EasyVocab · Version 73 · 1.11.2026</p>';
   return h;
 }
 /* ===== Rechtliches ===== */
@@ -1323,7 +1388,7 @@ function legalView(){
   }else{
     h+=hh('Lernmethode');h+=p('EasyVocab nutzt das Leitner-System, eine bewährte Form des verteilten Wiederholens (Spaced Repetition). Wörter, die du sicher kannst, kommen seltener. Schwache kommen öfter.');
     h+=hh('Technik');h+=p(isHosted()?'Die Sprachausgabe nutzt die Stimmen deines Geräts.':'KI-Funktionen laufen über Claude von Anthropic. Die Sprachausgabe nutzt die Stimmen deines Geräts.');
-    h+=hh('Version');h+=p('Version 71 · '+LEGAL_DATE);
+    h+=hh('Version');h+=p('Version 73 · '+LEGAL_DATE);
     h+=hh('Danke');h+=p('An alle, die getestet und Ideen geliefert haben.');
   }
   return h+'</div>';
@@ -1560,7 +1625,7 @@ function act(a,d){
   else if(a==='leaveyes'){S.leave=false;S.leaveOk=true;act('back');S.leaveOk=false;}
   else if(a==='back'){
     if(!S.leaveOk){const lm=leaveMsg();if(lm){S.leave=lm;render(true);return;}}
-    S.leave=false;let t=S.from||'menu';if(S.screen==='pet')t=S.petBack||'shop';if(S.screen==='word')t=S.wordBack||'words';if(S.screen==='feedback')t='settings';if(S.screen==='legal')t=S.legalBack||'settings';if(S.screen==='game'){if(S.game&&S.game.iv)clearInterval(S.game.iv);if(S.game&&S.game.tm)clearTimeout(S.game.tm);S.speakGo=false;try{speechSynthesis.cancel();}catch(e){}t=S.from||'practice';}S.confirmWord=-1;if(S.screen==='settings')t=S.prevTab||'menu';if(S.screen==='add')t=(S.from&&isRoot(S.from))?S.from:'words';S.screen=t;S.formErr='';S.addErr='';S.confirmReset=false;S.paste=false;S.bk='';render();}
+    S.leave=false;let t=S.from||'menu';if(S.screen==='pet')t=S.petBack||'shop';if(S.screen==='word')t=S.wordBack||'words';if(S.screen==='feedback')t='settings';if(S.screen==='legal')t=S.legalBack||'settings';if(S.screen==='game'){if(S.game&&S.game.iv)clearInterval(S.game.iv);if(S.game&&S.game.pv)clearInterval(S.game.pv);if(S.game&&S.game.tm)clearTimeout(S.game.tm);S.speakGo=false;try{speechSynthesis.cancel();}catch(e){}t=S.from||'practice';}S.confirmWord=-1;if(S.screen==='settings')t=S.prevTab||'menu';if(S.screen==='add')t=(S.from&&isRoot(S.from))?S.from:'words';S.screen=t;S.formErr='';S.addErr='';S.confirmReset=false;S.paste=false;S.bk='';render();}
   else if(a==='settings'){if(S.screen!=='settings')S.prevTab=isRoot(S.screen)?S.screen:'menu';S.screen='settings';render();}
   else if(a==='onbdone'){P.onb=1;save();S.screen='menu';render();}
   else if(a==='tutorial'){S.screen='onb';render();}
@@ -1651,8 +1716,19 @@ function act(a,d){
     const b=badgeList().filter(function(x){return x[3]===d.k;})[0];if(!b)return;
     if(b[2]&&!P.claimed[b[3]]){P.claimed[b[3]]=1;save();render(true);toast('🏅 Abzeichen erhalten: '+b[1]);}
     else toast(b[2]?b[1]+' · '+b[4]:'Noch gesperrt: '+b[4]);}
-  else if(a==='game'){startGame(d.v);}
-  else if(a==='memtap'){const g=S.game;if(!g||g.type!=='mem'||g.lock||g.over)return;const i=parseInt(d.i,10),c=g.cards[i];if(!c||c.open||c.done)return;c.open=true;
+  else if(a==='game'){if(d.v==='feed')startFeed();else startGame(d.v);}
+  else if(a==='feedrev'){const c=document.querySelector('.fcard[data-i="'+d.i+'"]');if(c&&!c.classList.contains('rev')){c.classList.add('rev');haptic('tap');const f=S.feed;if(f&&P.speak){const id=f.ids[parseInt(d.i,10)];if(canSpeakW(id))speak(id,true);}}}
+  else if(a==='feedspk'){speak(parseInt(d.id,10));}
+  else if(a==='feedans'){const f=S.feed;if(!f)return;const i=parseInt(d.i,10);if(f.done[i])return;const id=f.ids[i];const ok=d.v==='1';
+    f.done[i]=ok?1:2;applyResult(id,'en',ok,'cards',false);bump();if(ok)markGood(id);P.st[ok?'ok':'no']++;if(ok)earn(1);f.xp+=earnXp(ok?8:2);ok?f.ok++:f.no++;
+    if(dayCount()>=P.dailyGoal&&P.goalPaid!==fmt(new Date())){P.goalPaid=fmt(new Date());earn(10);earnXp(50);toast('Tagesziel erreicht! 🎉');}
+    updHist();save();haptic(ok?'ok':'warn');sfx(ok?'ok':'no');
+    const c=document.querySelector('.fcard[data-i="'+i+'"]');if(c){c.classList.add(ok?'okd':'nod');}
+    const secs=document.querySelectorAll('#feed .fc');const nx=secs[i+1];if(nx)setTimeout(function(){try{nx.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){nx.scrollIntoView();}},380);}
+  else if(a==='feedagain'){startFeed();}
+  else if(a==='nexttip'){tipNext();haptic('tap');}
+  else if(a==='peekskip'){const g=S.game;if(g&&g.type==='mem')memEndPeek(g);}
+  else if(a==='memtap'){const g=S.game;if(!g||g.type!=='mem'||g.lock||g.over||g.peeking)return;const i=parseInt(d.i,10),c=g.cards[i];if(!c||c.open||c.done)return;c.open=true;
     if(g.first<0){g.first=i;render(true);return;}
     const f=g.cards[g.first];g.moves++;
     if(f.id===c.id&&f.f!==c.f){f.done=c.done=true;f.open=c.open=false;g.first=-1;if(g.cards.every(function(x){return x.done;})){g.over=true;g.tEnd=Date.now();g.rw=gameReward(Math.min(30,8+g.cards.length),3);if(g.iv)clearInterval(g.iv);sfx('ok');confetti();}render(true);}
@@ -1684,14 +1760,14 @@ function act(a,d){
     const u=new SpeechSynthesisUtterance(d.v==='a'?'Hi! This is voice A. Ready to learn some words?':(d.v==='c'?'Hello! This is how I will read your words.':'Hello! This is voice B. Let us practise together.'));u.lang='en-GB';if(v){try{u.voice=v;u.lang=v.lang;}catch(e){}}u.rate=({slow:0.82,normal:0.95,fast:1.08}[(S.gs&&S.gs.tempo)||'normal'])||0.95;
     try{speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}if(!v)toast('Keine englische Stimme gefunden.');}
   else if(a==='lastres'){const t=d.v;if(P.story&&P.story.type===t){S.game={type:t,busy:false,err:'',res:P.story,started:true};render();}}
-  else if(a==='gset'){if(!S.gs)return;const k=d.key;let v=d.v;if(k==='n')S.gs.n[S.game.type]=parseInt(v,10);else if(k==='src'||k==='tempo'||k==='expl'||k==='variant'||k==='mode'||k==='clipsound'||k==='dikt'||k==='mean'||k==='rep')S.gs[k]=v;else if(k==='allV')S.gs.allV=(v==='1');render(true);}
+  else if(a==='gset'){if(!S.gs)return;const k=d.key;let v=d.v;if(k==='n')S.gs.n[S.game.type]=parseInt(v,10);else if(k==='src'||k==='tempo'||k==='expl'||k==='variant'||k==='mode'||k==='clipsound'||k==='dikt'||k==='mean'||k==='rep'||k==='peek')S.gs[k]=v;else if(k==='allV')S.gs.allV=(v==='1');render(true);}
   else if(a==='fbopen'){S.fb=S.fb||{kind:'bug',text:'',dev:true};S.screen='feedback';render();}
   else if(a==='fbset'){const t=document.getElementById('fbt');if(t)S.fb.text=t.value;S.fb.kind=d.v;render(true);}
   else if(a==='fbsend'){const t=document.getElementById('fbt');S.fb.text=t?t.value:S.fb.text;const dv=document.getElementById('fbd');S.fb.dev=dv?dv.checked:S.fb.dev;
     if(!S.fb.text.trim()){toast('Schreibe zuerst etwas.');return;}
     const kind={bug:'Fehler',idea:'Idee',praise:'Lob'}[S.fb.kind];
     let msg='EasyVocab Feedback ('+kind+')\n\n'+S.fb.text.trim();
-    if(S.fb.dev)msg+='\n\n---\nVersion 71 · Bildschirm '+innerWidth+'x'+innerHeight+' · '+(isDark()?'dunkel':'hell')+' · '+(P.look==='vivid'?'Lebendig':'Natürlich')+' · Glas '+(P.glass==null?2:P.glass)+' · Schrift '+(P.fontSize||'M')+' · '+(navigator.userAgent||'').replace(/\s+/g,' ').slice(0,120);
+    if(S.fb.dev)msg+='\n\n---\nVersion 73 · Bildschirm '+innerWidth+'x'+innerHeight+' · '+(isDark()?'dunkel':'hell')+' · '+(P.look==='vivid'?'Lebendig':'Natürlich')+' · Glas '+(P.glass==null?2:P.glass)+' · Schrift '+(P.fontSize||'M')+' · '+(navigator.userAgent||'').replace(/\s+/g,' ').slice(0,120);
     const copy=function(){try{navigator.clipboard.writeText(msg).then(function(){toast('Feedback kopiert. Schick es per Nachricht weiter.');},function(){S.fbtext=msg;toast('Kopieren blockiert. Markiere den Text unten und kopiere ihn selbst.');render(true);});}catch(e){S.fbtext=msg;render(true);}};
     if(navigator.share){navigator.share({title:'EasyVocab Feedback',text:msg}).catch(function(){});}else copy();}
   else if(a==='storygo'){const g=S.game;if(!g||g.busy||!aiOK())return;const pod=g.type==='pod';const ids=gameIds(S.gs.n[g.type],S.gs.src,S.gs.list);if(ids.length<3){toast('Dafür gibt es hier zu wenige Wörter.');return;}
@@ -1818,6 +1894,7 @@ document.addEventListener('keydown',function(e){
   if(e.key==='Enter'&&e.target&&e.target.id==='dk'){e.preventDefault();act(S.game&&S.game.state==='play'?'mkcheck':'mknext');return;}
   if(e.key==='Enter'&&e.target&&e.target.id==='a-q'){e.preventDefault();act('lookup');return;}
   if(e.key==='Enter'&&e.target&&(e.target.id==='r-ex'||e.target.id==='a-ex')){e.preventDefault();act(e.target.id==='r-ex'?'savesingle':'addw');return;}
+  if(S.screen==='game'&&S.game&&!S.game.over&&S.game.type==='blitz'&&S.game.q&&tag!=='INPUT'&&tag!=='TEXTAREA'&&tag!=='SELECT'&&/^[1-9]$/.test(e.key)){const n=parseInt(e.key,10)-1;if(S.game.q.opts[n]!==undefined){e.preventDefault();act('bopt',{i:String(n)});}return;}
   if(S.screen==='learn'){
     if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return;
     if(e.key==='ArrowRight'){act('next');}else if(e.key==='ArrowLeft'){act('prev');}else if(e.key===' '&&tag!=='BUTTON'){e.preventDefault();act('flip');}
@@ -1830,7 +1907,7 @@ document.addEventListener('keydown',function(e){
     const fl=document.getElementById('fc');
     if(fl&&fl.classList.contains('flipped')){if(e.key==='ArrowLeft'){act('know',{v:'0'});}else if(e.key==='ArrowRight'){act('know',{v:'1'});}}
     return;}
-  if(e.key!=='Enter'||tag==='BUTTON')return;
+  if(e.key!=='Enter'||(tag==='BUTTON'&&!(Q.answered&&e.target.getAttribute('data-act')==='opt')))return;
   if(Q.answered&&!Q.test){e.preventDefault();cont();}
   else if(!Q.answered&&Q.m==='type'){e.preventDefault();typeCheck();}
 });

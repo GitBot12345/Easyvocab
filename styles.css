@@ -902,5 +902,50 @@ main.xfade{animation:fadeIn .22s ease-out}
 :root[data-glass="3"][data-lm="0"] .orbs::after{opacity:.75}
 /* v72 Logo ruhiger: kein Leuchten */
 .hdr .logo.gradient-text,:root[data-lm="0"] .hdr .logo.gradient-text,:root[data-lm="1"] .hdr .logo.gradient-text{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 62%,#fff) 0%,var(--accent) 52%,color-mix(in srgb,var(--accent) 82%,#000) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;-webkit-text-stroke:0;filter:drop-shadow(0 1px 1px rgba(0,0,0,.2));font-weight:800;letter-spacing:-.02em}
-:root[data-lm="0"] .hdr .logo.gradient-text{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 70%,#fff) 0%,var(--accent) 55%,color-mix(in srgb,var(--accent) 88%,#000) 100%);filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+:root[data-lm="0"] .hdr .logo.gradient-text{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 70%,#fff) 0%,var(--accent) 55%,color-mix(in srgb,var(--accent) 88%,#000) 100%);-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+/* v72 Memory-Vorschau */
+.peekbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px}
+.peekbar span{font-weight:700}
+.memgrid.peeking .mc{pointer-events:none}
+/* v72 Lerntipps wechseln, Avatar-Raster */
+#tipt{transition:opacity .2s ease}
+#tipt.tfade{opacity:0}
+.tipc{cursor:pointer}
+.avgrid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:8px!important}
+.avgrid .av b{font-size:calc(12.5px*var(--fs,1));overflow-wrap:anywhere}
+.avgrid .av small{font-size:calc(11px*var(--fs,1))}
+@media (min-width:600px){.avgrid{grid-template-columns:repeat(5,minmax(0,1fr))!important}}
+@media (min-width:1024px){.avgrid{grid-template-columns:repeat(10,minmax(0,1fr))!important}}
+/* v73 Lern-Feed */
+main.feedm{padding:0 0 6px!important;margin:0 auto;width:100%;max-width:640px;gap:0}
+html:has(.feedm),html:has(.feedm) body{overflow:hidden}
+#app:has(.feedm){padding-bottom:0!important}
+.feed{height:70vh;overflow-y:auto;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none;border-radius:28px}
+.feed::-webkit-scrollbar{display:none}
+.fc{height:100%;scroll-snap-align:start;scroll-snap-stop:always;display:flex;align-items:stretch;padding:2px 0}
+.fcard{position:relative;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:18px 18px 22px;text-align:center;cursor:pointer;box-sizing:border-box;transition:box-shadow .3s ease}
+.fcard.okd{box-shadow:0 0 0 2px rgba(52,199,89,.55),var(--glass-shadow,0 10px 30px rgba(0,0,0,.15))}
+.fcard.nod{box-shadow:0 0 0 2px rgba(255,159,10,.6),var(--glass-shadow,0 10px 30px rgba(0,0,0,.15))}
+.ftop{display:flex;justify-content:space-between;width:100%}
+.fpill{padding:5px 12px;border-radius:999px;background:var(--glass-soft);border:1px solid var(--glass-line);font-size:calc(12.5px*var(--fs,1));font-weight:700}
+.fpill.soft{opacity:.75}
+.fmid{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;flex:1;width:100%}
+.fword{font-size:calc(40px*var(--fs,1));font-weight:800;letter-spacing:-.02em;line-height:1.1;overflow-wrap:anywhere}
+.fword.sm{font-size:calc(30px*var(--fs,1))}
+.fmid .emo{font-size:calc(56px*var(--fs,1))}
+.fans{display:none;flex-direction:column;gap:8px;align-items:center;animation:fadeIn .25s ease-out}
+.fcard.rev .fans{display:flex}
+.ftr{font-size:calc(26px*var(--fs,1));font-weight:700;color:var(--accent)}
+.fex{font-size:calc(15px*var(--fs,1));opacity:.75;font-style:italic;max-width:30ch}
+.fhint{font-size:calc(14px*var(--fs,1));opacity:.6}
+.fcard.rev .fhint{display:none}
+.frate{display:none;gap:10px;width:100%}
+.fcard.rev .frate,.frate.show{display:flex}
+.frate .btn{flex:1}
+.fcard.okd .frate,.fcard.nod .frate{opacity:.45;pointer-events:none}
+.fspk{position:absolute;right:14px;top:52px;width:46px;height:46px;border-radius:50%;border:1px solid var(--glass-line);background:var(--glass-soft);font-size:calc(20px*var(--fs,1));cursor:pointer}
+.fswipe{position:absolute;left:0;right:0;bottom:-2px;font-size:calc(12.5px*var(--fs,1));opacity:.55;animation:fswp 1.6s ease-in-out infinite}
+.fcard.rev .fswipe{display:none}
+@keyframes fswp{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@media (prefers-reduced-motion:reduce){.fswipe{animation:none}}
 :root{--fs:1}
