@@ -2100,6 +2100,7 @@ function wordView(){
   h+='<div class="glass pad w col tight"><div class="lab">Lernstand</div><div class="lg4"><div><b>'+bxs[0]+' / 5</b> '+esc(LNAME[wl]||'Englisch')+' → Deutsch</div><div><b>'+bxs[1]+' / 5</b> Deutsch → '+esc(LNAME[wl]||'Englisch')+'</div><div>Nächste Wiederholung: <b>'+esc(dueText(id,'en')||'noch nicht')+'</b></div><div>Fehler: <b>'+(P.wrong[id]||0)+'</b></div></div></div>';
   if(cu){h+='<div class="glass pad w col"><div class="lab">Bearbeiten</div><input id="we" class="in" type="text" aria-label="Fremdsprache" value="'+esc(c.en)+'"><input id="wd" class="in" type="text" aria-label="Deutsch" value="'+esc(c.de)+'"><input id="wx" class="in" type="text" placeholder="Beispielsatz (optional)" aria-label="Beispielsatz" value="'+esc(c.ex||'')+'"><div class="row2"><button class="btn pri" data-act="wordsave">Speichern</button><button class="btn bad" data-act="worddel">'+(S.confirmWord===id?'Wirklich löschen':'Löschen')+'</button></div></div>';}
   else h+='<p class="hint" style="margin:0 6px">Dieses Wort gehört zur mitgelieferten Liste und lässt sich nicht ändern.</p>';
+  {const fam=famIds(id);const ffn=ffNote(id);if(ffn)h+='<div class="glass pad w col tight"><div class="lab">Achtung</div><div>'+esc(ffn)+'</div></div>';if(fam.length){h+='<div class="glass pad w"><div class="lab" style="margin-bottom:6px">Verwandte Wörter</div>';fam.forEach(function(o){h+=wordRow(o,true);});h+='</div>';}}
   h+='<button class="btn full" data-act="hidew" data-id="'+id+'">🚫 Wort ausblenden</button>';
   return h;
 }
@@ -2662,15 +2663,16 @@ function quizView(){
     if(Q.err)h+='<div class="err" role="alert">'+Q.err+'</div>';
     if(!Q.answered)h+='<div class="hint" style="text-align:center;margin-top:6px;font-size:12px">✍️ Schreiben mit dem Apple Pencil oder tippen, beides geht.</div>';
     h+='</div>';
-    if(!Q.answered)h+='<div class="row2" style="grid-template-columns:1fr'+(Q.test?'':' 1fr')+' 1.4fr"><button class="btn" data-act="skip">Weiß nicht</button>'+(Q.test?'':'<button class="btn" data-act="hint">Tipp</button>')+'<button class="btn pri" data-act="check">Prüfen</button></div>';
+    if(!Q.answered)h+='<div class="row2" style="grid-template-columns:1fr 1fr 1.4fr"><button class="btn" data-act="skip">Weiß nicht</button>'+(Q.test?((Q.queue.length>1&&!(Q.laterU&&Q.laterU[id]))?'<button class="btn" data-act="later">Später</button>':'<span></span>'):'<button class="btn" data-act="hint">Tipp</button>')+'<button class="btn pri" data-act="check">Prüfen</button></div>';
   }
   if(Q.answered){
     const exact=an(id).split(';').some(function(a){return norm(a)===norm(Q.val);});
     let nx='';
     if(!Q.free)nx=Q.ok?'<div class="nx">'+(Q.hinted?'Mit Tipp gelöst, kommt morgen wieder':'Nächste Wiederholung '+dueText(id,Q.d)+' · Box '+bx(id,Q.d)+' von 5')+'</div>':'<div class="nx">Kommt gleich nochmal dran</div>'+((P.wrong[id]||0)>=3?'<div class="mnem">🧠 Schon '+P.wrong[id]+'× falsch. '+(E[id]?'Merk dir den Satz: „'+esc(E[id])+'“':'Sprich es dreimal laut und schreibe einen eigenen Satz damit.')+'</div>':'');
-    h+='<div class="sheet '+(Q.ok?'right':'wrong')+'" role="status"><b>'+(Q.ok?'Richtig':'Nicht ganz')+'</b>'+((Q.lastXp>0)?'<span class="xpchip">+'+Q.lastXp+' XP</span>':'')+(Q.ok?((m==='type'&&!exact)?'<div class="sol">Fast genau. Lösung: '+esc(an(id))+'</div>':''):'<div class="sol">Lösung: '+((m==='type'&&Q.val&&Q.val.trim())?diffSol(an(id),Q.val)+'<div class="hint" style="margin-top:2px">Rot markiert: hier weicht deine Antwort ab.</div>':esc(an(id)))+'</div>')+emoBlock(id,Q.ok?'right':'wrong')+ex+(Q.ok?'':memoBlock(id))+nx;
+    h+='<div class="sheet '+(Q.ok?'right':'wrong')+'" role="status"><b>'+(Q.ok?'Richtig':'Nicht ganz')+'</b>'+((Q.lastXp>0)?'<span class="xpchip">+'+Q.lastXp+' XP</span>':'')+(Q.ok?((m==='type'&&!exact)?'<div class="sol">Fast genau. Lösung: '+esc(an(id))+'</div>':''):'<div class="sol">Lösung: '+((m==='type'&&Q.val&&Q.val.trim())?diffSol(an(id),Q.val)+'<div class="hint" style="margin-top:2px">Rot markiert: hier weicht deine Antwort ab.</div>':esc(an(id)))+'</div>'+(Q.cfNote?'<div class="mnem">'+esc(Q.cfNote)+'</div>':'')+(ffNote(id)?'<div class="mnem">'+esc(ffNote(id))+'</div>':''))+emoBlock(id,Q.ok?'right':'wrong')+ex+(Q.ok?'':memoBlock(id))+nx;
     if(!Q.ok&&m==='type')h+='<button class="link" data-act="override">Meine Antwort war auch richtig</button>';
-    h+='<button class="link" data-act="hidew" data-id="'+id+'">Dieses Wort ausblenden</button>';
+    if(id>=BASE&&S.qedit===id){const c0=P.custom[id-BASE]||{en:W[id][0],de:W[id][1]};h+='<div class="col" style="gap:8px;margin:8px 0"><input id="qe" class="in" type="text" aria-label="Fremdsprache" value="'+esc(c0.en)+'"><input id="qd" class="in" type="text" aria-label="Deutsch" value="'+esc(c0.de)+'"><div class="row2"><button class="btn pri" data-act="qsave">Speichern</button><button class="btn" data-act="qcancel">Abbrechen</button></div></div>';}
+    else{if(id>=BASE)h+='<button class="link" data-act="qedit" data-id="'+id+'">Wort bearbeiten</button> ';h+='<button class="link" data-act="hidew" data-id="'+id+'">Dieses Wort ausblenden</button>';}
     h+='<button class="btn" data-act="cont">Weiter</button></div>';
   }
   return h;
@@ -2691,9 +2693,44 @@ function submit(ok,quick){
     if(dayCount()>=P.dailyGoal&&P.goalPaid!==fmt(new Date())){P.goalPaid=fmt(new Date());earn(10);earnXp(50);Q.bonus=true;}P.st[ok?'ok':'no']++;updHist();save();}
   if(Q.test)Q.log.push({id:id,d:Q.d,val:Q.val,ok:ok,snap:Q.snap,first:Q.first,free:Q.free});
   if(!ok&&Q.first&&(Q.m==='type'||Q.test)&&Q.val&&Q.val.trim()){try{const tgt=(Q.d==='en'?W[id][1]:W[id][0]);const xs=norm(Q.val);const dist=Math.min.apply(null,tgt.split(';').map(norm).filter(Boolean).concat([norm(tgt)]).map(function(t){return lev(xs,t);}));Q.nearL=Q.nearL||[];const nr=(dist<=2&&xs.length>=3)||partialM(Q.val,tgt);Q.nearL.push({id:id,near:nr});if(Q.test&&nr&&Q.log.length)Q.log[Q.log.length-1].half=true;}catch(e){}}
+  Q.cfNote='';
+  if(!ok&&Q.first&&(Q.m==='type'||Q.test)&&Q.val&&Q.val.trim()){try{const o=confWith(Q.val,id,Q.d);if(o!=null){Q.cfNote=confNote(Q.val,id,Q.d);if(Q.test&&Q.log.length)Q.log[Q.log.length-1].cf=Q.cfNote;else{Q.cfd=Q.cfd||{};if(!Q.cfd[o]&&Q.queue.indexOf(o)<0){Q.cfd[o]=1;Q.queue.splice(Math.min(3,Q.queue.length),0,o);Q.total++;}}}}catch(e){}}
+  if(!ok&&Q.first&&(P.wrong[id]||0)>=3&&aiOK()&&!(P.memo&&P.memo[id])){try{aiMemo(id).catch(function(){});}catch(e){}}
   try{restCheck();}catch(e){}if(Q.first){if(ok){Q.run=(Q.run||0)+1;if(Q.run>(Q.runMax||0))Q.runMax=Q.run;}else{Q.run=0;}}Q.answered=true;Q.ok=ok;if(ok&&Q.first&&Q.run>=3&&(Q.run===3||Q.run%5===0)){sfx('streak',Q.run);Q.runPop=Q.run;}else sfx(ok?'ok':'no',Q.run);haptic(ok?'ok':'warn');
   if(quick||Q.test){cont();return;}
   render();
+}
+
+/* ===== v105: Falsche Freunde, Verwechslungen, Wortfamilien ===== */
+const FF={
+'actual':'heißt tatsächlich, nicht „aktuell“ (das ist current)','actually':'heißt tatsächlich, nicht „aktuell“','eventually':'heißt schließlich, nicht „eventuell“ (das ist possibly)',
+'sensible':'heißt vernünftig, nicht „sensibel“ (das ist sensitive)','sensitive':'heißt empfindlich oder einfühlsam, nicht „vernünftig“','become':'heißt werden, nicht „bekommen“ (das ist get)',
+'gift':'heißt Geschenk, nicht „Gift“ (das ist poison)','chef':'heißt Koch, nicht „Chef“ (das ist boss)','fabric':'heißt Stoff, nicht „Fabrik“ (das ist factory)',
+'handy':'heißt praktisch, nicht „Handy“ (das ist mobile phone)','brief':'heißt kurz, nicht „Brief“ (das ist letter)','kind':'heißt nett oder Art, nicht „Kind“ (das ist child)',
+'also':'heißt auch, nicht „also“ (das ist so oder therefore)','will':'zeigt die Zukunft, nicht „wollen“ (das ist want)','gymnasium':'heißt Turnhalle, nicht „Gymnasium“ (das ist grammar school)',
+'physician':'heißt Arzt, nicht „Physiker“ (das ist physicist)','pension':'heißt Rente, nicht „Pension“ (das ist guesthouse)','preservative':'heißt Konservierungsmittel, nicht „Präservativ“',
+'provision':'heißt Vorrat oder Bereitstellung, nicht „Provision“ (das ist commission)','mist':'heißt Dunst, nicht „Mist“ (das ist rubbish)','wand':'heißt Zauberstab, nicht „Wand“ (das ist wall)',
+'rat':'heißt Ratte, nicht „Rat“ (das ist advice)','angle':'heißt Winkel, nicht „Angel“ (das ist fishing rod)','sympathetic':'heißt mitfühlend, nicht „sympathisch“ (das ist nice)',
+'ordinary':'heißt gewöhnlich, nicht „ordinär“ (das ist vulgar)','decent':'heißt anständig, nicht „dezent“ (das ist discreet)','novel':'heißt Roman, nicht „Novelle“',
+'billion':'heißt Milliarde, nicht „Billion“ (das ist trillion)','gross':'heißt eklig oder brutto, nicht „groß“ (das ist big)','loose':'heißt locker, nicht „lose“ (das ist lose = verlieren)',
+'lose':'heißt verlieren, nicht „locker“ (das ist loose)','mean':'heißt bedeuten oder gemein, nicht „meinen“ (das ist think)','pretend':'heißt so tun als ob, nicht „prätendieren“',
+'realize':'heißt erkennen oder merken, nicht „realisieren“ im Sinn von verwirklichen','demonstrate':'heißt zeigen, nicht nur „demonstrieren“','map':'heißt Landkarte, nicht „Mappe“ (das ist folder)',
+'fast':'heißt schnell oder fest, nicht „fast“ (das ist almost)','art':'heißt Kunst, nicht „Art“ (das ist kind oder type)','bad':'heißt schlecht, nicht „Bad“ (das ist bath)',
+'rock':'heißt Fels oder Rockmusik, nicht „Rock“ (das ist skirt)','chance':'heißt Gelegenheit oder Zufall','fabricate':'heißt erfinden, nicht „fabrizieren“','dozen':'heißt Dutzend, nicht „Dose“ (das ist can)',
+'tablet':'heißt Tablette, nicht nur „Tablet“','bald':'heißt kahl, nicht „bald“ (das ist soon)','hell':'zeigt Dunkelheit nicht, heißt Hölle, nicht „hell“ (das ist bright)'
+};
+function ffKey(id){if(wlang(id)!=='en')return '';return String(W[id][0]).toLowerCase().replace(/\(.*?\)/g,' ').replace(/^(to|a|an|the)\s+/,'').trim().split(/[\s;,\/]+/)[0];}
+function ffNote(id){const k=ffKey(id);return k&&FF[k]?'⚠️ Falscher Freund: „'+k+'“ '+FF[k]+'.':'';}
+function confWith(val,id,d){
+  const x=norm(val||'');if(x.length<3)return null;
+  const all=allIds();for(let k=0;k<all.length;k++){const o=all[k];if(o===id)continue;const ans=d==='en'?W[o][1]:W[o][0];if(check(val,ans))return o;}
+  return null;
+}
+function confNote(val,id,d){const o=confWith(val,id,d);if(o==null)return '';const q=d==='en'?W[o][0]:W[o][1];return '🔀 Verwechselt: „'+q+'“ heißt '+(d==='en'?W[o][1]:W[o][0])+'.';}
+function famIds(id){
+  if(wlang(id)!=='en')return [];const k=ffKey(id);if(k.length<5)return [];const out=[];
+  allIds().forEach(function(o){if(o===id||wlang(o)!=='en')return;const k2=ffKey(o);if(k2.length<5)return;let n=0;while(n<k.length&&n<k2.length&&k[n]===k2[n])n++;if(n>=Math.max(5,Math.min(k.length,k2.length)-2))out.push(o);});
+  return out.slice(0,5);
 }
 function testFix(i,quiet){
   const x=Q.log[i];if(!x||x.ok)return;const id=x.id;
@@ -2716,6 +2753,13 @@ async function aiJudge(){
     const ok=(r&&Array.isArray(r.ok))?r.ok.map(Number):[];let n=0;items.forEach(function(t){if(ok.indexOf(t.i)>=0){testFix(t.i,true);n++;}});Q.judgeN=n;if(n)toast('KI hat '+n+' Antwort'+(n>1?'en':'')+' als richtig gewertet.');
   }catch(e){Q.judgeErr=aiErr(e&&e.code);}
   Q.judging=false;save();if(S.screen==='result')render(true);
+}
+async function aiWhy(i){
+  const x=Q&&Q.log[i];if(!x||x.why||x.whyBusy||!aiOK())return;x.whyBusy=true;render(true);
+  const q=x.d==='en'?W[x.id][0]:W[x.id][1],a=x.d==='en'?W[x.id][1]:W[x.id][0];
+  try{aiTrack();const r=await AI.json('Ein Schüler hat bei einer Vokabel falsch geantwortet. Frage: "'+q.replace(/"/g,"'")+'". Richtig: "'+a.replace(/"/g,"'")+'". Antwort des Schülers: "'+String(x.val||'').replace(/"/g,"'")+'". Erkläre auf Deutsch in höchstens 25 einfachen Wörtern, warum das falsch ist und woran man den Unterschied merkt (z. B. falscher Freund, ähnlich klingendes Wort). Antworte NUR mit JSON {"t":"..."}.',{modelTier:'quick'});
+    x.why=String((r&&r.t)||'').slice(0,220)||'Keine Erklärung gefunden.';}catch(e){x.why=aiErr(e&&e.code)||'Das hat nicht geklappt.';}
+  x.whyBusy=false;render(true);
 }
 function hideWord(id){
   P.hid=P.hid||{};P.hid[id]=1;save();toast('Wort ausgeblendet. Zurückholen: Einstellungen › Lernen.');
@@ -2746,7 +2790,7 @@ function resultView(){
     h+=''+(Q.log.some(function(x){return x.half;})?'<p class="hint noprint" style="text-align:center;margin:0">Fast richtige Antworten zählen halb.</p>':'')+'<button class="btn full noprint" data-act="printres">📄 Als PDF speichern oder drucken</button>';
     if(Q.judging)h+='<div class="glass pad w center tight">🤖 KI prüft deine Fehler …</div>';else if(Q.judgeN)h+='<div class="glass pad w center tight">🤖 KI hat '+Q.judgeN+' Antwort'+(Q.judgeN>1?'en':'')+' als richtig gewertet.</div>';
     const bad=Q.log.filter(function(x){return !x.ok;});
-    if(bad.length){h+='<div class="glass pad w"><div class="lab" style="margin-bottom:6px">Fehler</div>';bad.slice(0,20).forEach(function(x){const pq=x.d==='en'?W[x.id][0]:W[x.id][1];const aa=x.d==='en'?W[x.id][1]:W[x.id][0];h+='<div class="wl" style="flex-direction:column;align-items:flex-start;gap:2px"><span style="flex:none">'+esc(pq)+'</span><span style="flex:none;color:var(--bad)">Du: '+(x.val.trim()?esc(x.val):'keine Antwort')+'</span><span style="flex:none;color:var(--good);font-weight:700">Richtig: '+esc(aa)+'</span>'+(x.val.trim()?'<button class="link noprint" data-act="testfix" data-i="'+Q.log.indexOf(x)+'">Meine Antwort war auch richtig</button>':'')+'</div>';});if(bad.length>20)h+='<p class="hint" style="margin:6px 0 0">… und '+(bad.length-20)+' weitere Wörter. Die schwierigsten üben unter Knifflige Wörter.</p>';h+='</div>';}
+    if(bad.length){h+='<div class="glass pad w"><div class="lab" style="margin-bottom:6px">Fehler</div>';bad.slice(0,20).forEach(function(x){const pq=x.d==='en'?W[x.id][0]:W[x.id][1];const aa=x.d==='en'?W[x.id][1]:W[x.id][0];h+='<div class="wl" style="flex-direction:column;align-items:flex-start;gap:2px"><span style="flex:none">'+esc(pq)+'</span><span style="flex:none;color:var(--bad)">Du: '+(x.val.trim()?esc(x.val):'keine Antwort')+'</span><span style="flex:none;color:var(--good);font-weight:700">Richtig: '+esc(aa)+'</span>'+(x.val.trim()?'<button class="link noprint" data-act="testfix" data-i="'+Q.log.indexOf(x)+'">Meine Antwort war auch richtig</button>':'')+(x.cf?'<span class="hint" style="flex:none">'+esc(x.cf)+'</span>':'')+(ffNote(x.id)&&x.d==='en'?'<span class="hint" style="flex:none">'+esc(ffNote(x.id))+'</span>':'')+(x.why?'<span class="hint" style="flex:none">💡 '+esc(x.why)+'</span>':(aiOK()?'<button class="link noprint" data-act="aiwhy" data-i="'+Q.log.indexOf(x)+'">'+(x.whyBusy?'KI denkt nach …':'Warum falsch? (KI)')+'</button>':''))+'</div>';});if(bad.length>20)h+='<p class="hint" style="margin:6px 0 0">… und '+(bad.length-20)+' weitere Wörter. Die schwierigsten üben unter Knifflige Wörter.</p>';h+='</div>';}
   } else if(S.mode==='cards'){
     h='<div class="glass pad w center"><div class="big-ico">🎉</div><p>Alle Karten durch!</p>'+(Q.free?'<p class="hint" style="font-size:12px">Freies Üben, Fortschritt unverändert</p>':'')+'</div>';
   } else {
@@ -2928,11 +2972,16 @@ function act(a,d){
   else if(a==='got'){const id=Q.queue.shift();Q.intro.add(id);Q.queue.splice(Math.min(2,Q.queue.length),0,id);prepare();render();maybeSpeak();saveRun();}
   else if(a==='opt'){if(Q.answered)return;const i=parseInt(d.i,10);Q.pick=i;submit(Q.opts[i]===Q.queue[0]);autoNext();}
   else if(a==='check'){typeCheck();}
+  else if(a==='later'){if(!Q||!Q.test||Q.answered||Q.queue.length<2)return;Q.laterU=Q.laterU||{};Q.laterU[Q.queue[0]]=1;Q.queue.push(Q.queue.shift());prepare();render();toast('Kommt am Ende nochmal.');}
   else if(a==='hint'){const el=document.getElementById('ans');Q.val=el?el.value:'';Q.hinted=true;Q.hint=hintText(Q.queue[0]);Q.err='';render();}
   else if(a==='skip'){const el=document.getElementById('ans');Q.val=el?el.value:'';Q.err='';submit(false);}
   else if(a==='override'){override();}
   else if(a==='spktype'){const el=document.getElementById('spk-in');const v=el?el.value.trim():'';if(!v){toast('Tippe zuerst das Wort.');return;}spkResult([v]);}
   else if(a==='testfix'){testFix(parseInt(d.i,10));}
+  else if(a==='aiwhy'){aiWhy(parseInt(d.i,10));}
+  else if(a==='qedit'){S.qedit=parseInt(d.id,10);render(true);}
+  else if(a==='qcancel'){S.qedit=null;render(true);}
+  else if(a==='qsave'){const id=S.qedit;const c=P.custom[id-BASE];const en=(document.getElementById('qe')||{}).value,de=(document.getElementById('qd')||{}).value;if(!c||!en||!de||!en.trim()||!de.trim()){toast('Wort und Übersetzung ausfüllen.');return;}c.en=en.trim();c.de=de.trim();W[id]=[c.en,c.de];BC=null;S.qedit=null;save();toast('Gespeichert.');render(true);}
   else if(a==='hidew'){const hid=parseInt(d.id,10);hideWord(hid);
     if(S.screen==='quiz'&&Q&&Q.queue[0]===hid){Q.queue=Q.queue.filter(function(i,k){return k===0||i!==hid;});Q.ok=true;cont();try{Q.hist.pop();}catch(e){}}
     else{S.sheet=null;if(S.screen==='word')S.screen=S.wordBack||'words';render(true);}}
