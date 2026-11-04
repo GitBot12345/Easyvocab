@@ -329,6 +329,18 @@ function weekCards(){let h='';const dow=new Date().getDay();
  return h;}
 function reportText(){const w=weekInfo(0);const nm=P.nick?P.nick:'Der Lernende';const nt=(typeof noteTxt==='function'&&typeof gradeNote==='function')?'':'';
  return 'EasyVocab · Wochenbericht\n'+nm+'\n\nLerntage diese Woche: '+w.days+' von 7\nWörter geübt: '+w.words+'\nSerie: '+streak()+' Tage\nGemeisterte Wörter: '+mastered()+'\nTagesziel: '+P.dailyGoal+' Wörter\n\nGesendet aus der EasyVocab-App.';}
+function testPts(q){let c=0;q.log.forEach(function(x){if(x.ok)c++;else if(x.half)c+=0.5;});return c;}
+function ptsTxt(c){return String(c).replace('.',',');}
+
+function printRes(){try{
+ const rows=(Q&&Q.log||[]).map(function(x){const q=x.d==='en'?W[x.id][0]:W[x.id][1];const ans=x.d==='en'?W[x.id][1]:W[x.id][0];return '<tr class="'+(x.ok?'ok':x.half?'hf':'no')+'"><td>'+esc(q)+'</td><td>'+(x.val&&String(x.val).trim()?esc(x.val):'–')+'</td><td>'+esc(ans)+'</td><td class="m">'+(x.ok?'✓':x.half?'½':'✗')+'</td></tr>';}).join('');
+ const c=testPts(Q),tot=Q.total||Q.log.length||1,pc=Math.round(c/tot*100);
+ const d=new Date();const ds=d.getDate()+'.'+(d.getMonth()+1)+'.'+d.getFullYear();
+ const html='<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><title>EasyVocab Ergebnis</title><style>*{box-sizing:border-box}body{font:14px/1.4 -apple-system,Helvetica,Arial,sans-serif;color:#000;background:#fff;margin:24px}h1{font-size:22px;margin:0 0 4px}p{margin:2px 0 12px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #888;padding:6px 8px;text-align:left;vertical-align:top}th{background:#eee}td.m{text-align:center;width:36px;font-weight:700}tr.no td{background:#fde8e8}tr.hf td{background:#fff4d6}tr.ok td{background:#fff}@page{margin:14mm}</style></head><body><h1>EasyVocab · '+(Q.sim?'Klausur-Test':'Probetest')+'</h1><p>'+esc(P.nick||'')+(P.nick?' · ':'')+ds+' · '+ptsTxt(c)+' von '+tot+' richtig ('+pc+' %) · ungefähre Note '+grade(pc)+'</p><table><thead><tr><th>Aufgabe</th><th>Deine Antwort</th><th>Richtig</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></body></html>';
+ const fr=document.createElement('iframe');fr.setAttribute('aria-hidden','true');fr.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';document.body.appendChild(fr);
+ const dc=fr.contentWindow.document;dc.open();dc.write(html);dc.close();
+ setTimeout(function(){try{fr.contentWindow.focus();fr.contentWindow.print();}catch(e){toast('Drucken geht hier nicht.');}setTimeout(function(){if(fr.parentNode)fr.parentNode.removeChild(fr);},4000);},300);
+}catch(e){toast('Drucken geht hier nicht.');}}
 var PERF_AUTO=null;
 function perfLite(){const m=P.perf||'auto';if(m==='on')return true;if(m==='off')return false;if(PERF_AUTO!==null)return PERF_AUTO;try{const n=navigator.hardwareConcurrency||8,mem=navigator.deviceMemory||8;if(n<=4||mem<=4)return true;if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)return true;}catch(e){}return false;}
 function perfProbe(){if(PERF_AUTO!==null||(P.perf&&P.perf!=='auto')||!window.requestAnimationFrame)return;let n=0,t0=0,bad=0;function f(t){if(t0){const dt=t-t0;if(dt>38)bad++;n++;}t0=t;if(n<45)requestAnimationFrame(f);else{PERF_AUTO=bad>=14;document.documentElement.classList.toggle('lite',perfLite());}}requestAnimationFrame(f);}
@@ -1034,7 +1046,7 @@ function qTimeUp(q){
   if(q.pause){q.queue=[q.queue[0]];q.ok=true;q.answered=true;toast('3 Minuten sind um.');cont();}
 }
 function simSave(q){
-  try{const c=q.log.filter(function(x){return x.ok;}).length;const p=Math.round(c/Math.max(1,q.total)*100);
+  try{const c=testPts(q);const p=Math.round(c/Math.max(1,q.total)*100);
     if(!Array.isArray(P.sims))P.sims=[];if(q.simDone)return;q.simDone=true;P.sims.push({d:fmt(new Date()),p:p,n:grade(p),exam:q.simExam||''});P.sims=P.sims.slice(-12);save();}catch(e){}
 }
 function simKey(){return '92 % = 1 · 81 % = 2 · 67 % = 3 · 50 % = 4 · 30 % = 5';}
@@ -1109,9 +1121,9 @@ function speak(id,quiet){
 }
 function maybeSpeak(){if(P.speak&&Q&&Q.queue.length&&(Q.d==='en'||Q.m==='intro'))speak(Q.queue[0],true);}
 function norm(s){
-  s=s.toLowerCase().replace(/\([^)]*\)/g,' ').replace(/jmdn\.|jmdm\.|jmds\.|etw\./g,' ').replace(/\bsb\b|\bsth\b/g,' ');
+  s=s.toLowerCase().replace(/\([^)]*\)/g,' ').replace(/jmdn\.|jmdm\.|jmds\.|etw\./g,' ').replace(/\b(sb|sth|smb|smth|smbd|sbd|somebody|something|someone|somebodys|sbs|one's|ones|oneself|yourself|jmd|jmdn|jmdm|jmds|etw)(?:'s)?\b/g,' ');
   s=s.replace(/[\/.,;!?'"\-]/g,' ').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/ß/g,'ss').replace(/ae/g,'a').replace(/oe/g,'o').replace(/ue/g,'u');
-  return s.replace(/\s+/g,' ').trim().replace(/^(to|sich|be) /,'');
+  return s.replace(/\s+/g,' ').trim().replace(/^((to|sich|be) )+/,'');
 }
 function lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=[];for(let j=0;j<=n;j++)p[j]=j;for(let i=1;i<=m;i++){let c=[i];for(let j=1;j<=n;j++){c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));}p=c;}return p[n];}
 function diffSol(sol,val){
@@ -2580,7 +2592,7 @@ function submit(ok,quick){
     if(Q.first&&Q.t0){const sec=Math.min(60,(Date.now()-Q.t0)/1000);P.avgSec=Math.round(((P.avgSec||8)*0.92+sec*0.08)*10)/10;}
     if(dayCount()>=P.dailyGoal&&P.goalPaid!==fmt(new Date())){P.goalPaid=fmt(new Date());earn(10);earnXp(50);Q.bonus=true;}P.st[ok?'ok':'no']++;updHist();save();}
   if(Q.test)Q.log.push({id:id,d:Q.d,val:Q.val,ok:ok});
-  if(!ok&&Q.first&&(Q.m==='type'||Q.test)&&Q.val&&Q.val.trim()){try{const tgt=(Q.d==='en'?W[id][1]:W[id][0]);const xs=norm(Q.val);const dist=Math.min.apply(null,tgt.split(';').map(norm).filter(Boolean).concat([norm(tgt)]).map(function(t){return lev(xs,t);}));Q.nearL=Q.nearL||[];Q.nearL.push({id:id,near:dist<=2&&xs.length>=3});}catch(e){}}
+  if(!ok&&Q.first&&(Q.m==='type'||Q.test)&&Q.val&&Q.val.trim()){try{const tgt=(Q.d==='en'?W[id][1]:W[id][0]);const xs=norm(Q.val);const dist=Math.min.apply(null,tgt.split(';').map(norm).filter(Boolean).concat([norm(tgt)]).map(function(t){return lev(xs,t);}));Q.nearL=Q.nearL||[];Q.nearL.push({id:id,near:dist<=2&&xs.length>=3});if(Q.test&&dist<=2&&xs.length>=3&&Q.log.length)Q.log[Q.log.length-1].half=true;}catch(e){}}
   try{restCheck();}catch(e){}if(Q.first){if(ok){Q.run=(Q.run||0)+1;if(Q.run>(Q.runMax||0))Q.runMax=Q.run;}else{Q.run=0;}}Q.answered=true;Q.ok=ok;if(ok&&Q.first&&Q.run>=3&&(Q.run===3||Q.run%5===0)){sfx('streak',Q.run);Q.runPop=Q.run;}else sfx(ok?'ok':'no',Q.run);haptic(ok?'ok':'warn');
   if(quick||Q.test){cont();return;}
   render();
@@ -2602,11 +2614,11 @@ function resultView(){
   const reached=!Q.free&&Q.goalBefore<P.dailyGoal&&dayCount()>=P.dailyGoal;
   let h;
   if(Q.test){
-    const c=Q.log.filter(function(x){return x.ok;}).length;const p=Math.round(c/Q.total*100);
+    const c=testPts(Q);const p=Math.round(c/Q.total*100);
     if(Q.sim){simSave(Q);const used=Math.min(Date.now(),Q.simEnd)-Q.simStart;const prev=(P.sims||[]).slice(0,-1).slice(-3).map(function(x){return x.n;});
-      h='<div class="glass pad w center res"><div class="big-ico">📝</div><div class="lab">Klausur-Test'+(Q.simExam?' · '+esc(Q.simExam):'')+'</div><div class="big">Note '+grade(p)+'</div><p>'+p+' % · '+c+' von '+Q.total+' richtig · Zeit '+fmtMS(used)+'</p><p class="hint" style="margin:0;font-size:12px">Schlüssel: '+simKey()+'</p>'+(prev.length?'<p class="hint" style="margin:0">Letzte Tests: Note '+prev.join(', ')+'</p>':'')+'</div>';}
-    else h='<div class="glass pad w center res"><div class="big-ico">📝</div><div class="lab">Probetest</div><div class="big">'+p+' %</div><p>'+c+' von '+Q.total+' richtig · ungefähre Note '+grade(p)+'</p></div>';
-    h+='<button class="btn full noprint" data-act="printres">📄 Als PDF speichern oder drucken</button>';
+      h='<div class="glass pad w center res"><div class="big-ico">📝</div><div class="lab">Klausur-Test'+(Q.simExam?' · '+esc(Q.simExam):'')+'</div><div class="big">Note '+grade(p)+'</div><p>'+p+' % · '+ptsTxt(c)+' von '+Q.total+' richtig · Zeit '+fmtMS(used)+'</p><p class="hint" style="margin:0;font-size:12px">Schlüssel: '+simKey()+'</p>'+(prev.length?'<p class="hint" style="margin:0">Letzte Tests: Note '+prev.join(', ')+'</p>':'')+'</div>';}
+    else h='<div class="glass pad w center res"><div class="big-ico">📝</div><div class="lab">Probetest</div><div class="big">'+p+' %</div><p>'+ptsTxt(c)+' von '+Q.total+' richtig · ungefähre Note '+grade(p)+'</p></div>';
+    h+=''+(Q.log.some(function(x){return x.half;})?'<p class="hint noprint" style="text-align:center;margin:0">Fast richtige Antworten zählen halb.</p>':'')+'<button class="btn full noprint" data-act="printres">📄 Als PDF speichern oder drucken</button>';
     const bad=Q.log.filter(function(x){return !x.ok;});
     if(bad.length){h+='<div class="glass pad w"><div class="lab" style="margin-bottom:6px">Fehler</div>';bad.slice(0,20).forEach(function(x){const pq=x.d==='en'?W[x.id][0]:W[x.id][1];const aa=x.d==='en'?W[x.id][1]:W[x.id][0];h+='<div class="wl" style="flex-direction:column;align-items:flex-start;gap:2px"><span style="flex:none">'+esc(pq)+'</span><span style="flex:none;color:var(--bad)">Du: '+(x.val.trim()?esc(x.val):'keine Antwort')+'</span><span style="flex:none;color:var(--good);font-weight:700">Richtig: '+esc(aa)+'</span></div>';});if(bad.length>20)h+='<p class="hint" style="margin:6px 0 0">… und '+(bad.length-20)+' weitere Wörter. Die schwierigsten üben unter Knifflige Wörter.</p>';h+='</div>';}
   } else if(S.mode==='cards'){
@@ -2864,7 +2876,7 @@ function act(a,d){
   else if(a==='acdel'){acctDelete();}
   else if(a==='acsave'){sbSave(false);}
   else if(a==='acload'){cloudLoad();}
-  else if(a==='printres'){try{window.print();}catch(e){toast('Drucken geht hier nicht.');}}
+  else if(a==='printres'){printRes();}
   else if(a==='news'){showNews();}
   else if(a==='nexttip'){tipNext();haptic('tap');}
   else if(a==='peekskip'){const g=S.game;if(g&&g.type==='mem')memEndPeek(g);}
