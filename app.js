@@ -341,6 +341,8 @@ function printRes(){try{
  const dc=fr.contentWindow.document;dc.open();dc.write(html);dc.close();
  setTimeout(function(){try{fr.contentWindow.focus();fr.contentWindow.print();}catch(e){toast('Drucken geht hier nicht.');}setTimeout(function(){if(fr.parentNode)fr.parentNode.removeChild(fr);},4000);},300);
 }catch(e){toast('Drucken geht hier nicht.');}}
+function pickCover(arr,n){P.tseen=P.tseen||{};const sorted=arr.map(function(id,i){return [id,P.tseen[id]||0,i];}).sort(function(a,b){return (a[1]-b[1])||(a[2]-b[2]);}).slice(0,n).map(function(x){return x[0];});sorted.forEach(function(id){P.tseen[id]=(P.tseen[id]||0)+1;});save();return shuffle(sorted);}
+function errIds(){const o={};try{Array.from(Q.missed||[]).forEach(function(i){o[i]=1;});(Q.log||[]).forEach(function(x){if(!x.ok)o[x.id]=1;});}catch(e){}return Object.keys(o).map(Number).filter(isAlive);}
 var PERF_AUTO=null;
 function perfLite(){const m=P.perf||'auto';if(m==='on')return true;if(m==='off')return false;if(PERF_AUTO!==null)return PERF_AUTO;try{const n=navigator.hardwareConcurrency||8,mem=navigator.deviceMemory||8;if(n<=4||mem<=4)return true;if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)return true;}catch(e){}return false;}
 function perfProbe(){if(PERF_AUTO!==null||(P.perf&&P.perf!=='auto')||!window.requestAnimationFrame)return;let n=0,t0=0,bad=0;function f(t){if(t0){const dt=t-t0;if(dt>38)bad++;n++;}t0=t;if(n<45)requestAnimationFrame(f);else{PERF_AUTO=bad>=14;document.documentElement.classList.toggle('lite',perfLite());}}requestAnimationFrame(f);}
@@ -1039,7 +1041,7 @@ function simStart(examId){
   let ids,ex=null;
   if(examId){ex=examById(examId);ids=ex?examIds(ex):[];}
   else{const ne=nextExam();if(ne){ex=ne;ids=examIds(ne);}else ids=focusOn()?focusIds():allIds();}
-  ids=shuffle(ids.filter(isAlive)).slice(0,40);
+  ids=pickCover(shuffle(ids.filter(isAlive)),40);
   if(ids.length<5){toast('Für einen Klausur-Test brauche ich mindestens 5 Wörter.');return;}
   usageBump('sim');S.customIds=ids;S.b='custom';S.dir='mix';setFrom();begin('test',true);
   if(Q&&S.screen==='quiz'){Q.sim=true;Q.simExam=ex?ex.name:'';Q.simStart=Date.now();Q.simEnd=Date.now()+ids.length*(P.examSec||20)*1000;qTimerStart();render(true);}
@@ -2499,16 +2501,16 @@ function begin(m,free){
   S.mode=m;S.free=!!free;
   const base=scope(S.b);
   if(!base.length){toast(S.b==='weak'?'Noch keine kniffligen Wörter – erst ein paar Runden üben 👍':'Hier sind keine Wörter. Füge welche unter Wörter hinzu.');S.screen='menu';render();return;}
-  const noise=P.shuffleCards?0.9:0;
-  const order=function(ids){return ids.map(function(id){return [id,bAvg(id)+Math.random()*noise+(noise?0:id*1e-6)];}).sort(function(a,b){return a[1]-b[1];}).map(function(x){return x[0];});};
+  const noise=P.shuffleCards?0.9:0.4;const exb={};try{const ne=nextExam();if(ne&&daysLeft(ne)<=21&&(S.b==='all'||S.b==='focus'))examIds(ne).forEach(function(i){exb[i]=1;});}catch(e){}
+  const order=function(ids){return ids.map(function(id){return [id,bAvg(id)+Math.random()*noise-(exb[id]?0.8:0)];}).sort(function(a,b){return a[1]-b[1];}).map(function(x){return x[0];});};
   let p;
   if(free||m==='test')p=P.shuffleCards||m==='test'?shuffle(base):base.slice();
   else if(S.b==='weak'||S.b==='wk')p=shuffle(base);
   else if(S.b==='exam'){p=base.filter(function(id){return bAvg(id)<3;});if(!p.length){p=shuffle(base);toast('Alles sicher – Wiederholung zur Festigung');}else p=order(p);}
   else{p=dueOf(base);if(!p.length){S.screen='nodue';render();return;}p=order(p);}
   const n=S.b==='custom'?p.length:m==='cards'?P.flashcardCount:(m==='test'?(S.b==='exam'?Math.min(60,p.length):P.quizLength):P.quizLength);
-  p=p.slice(0,n);
-  if(m!=='cards'&&!(S.b==='exam'&&m==='test'))p=interleave(p);
+  p=(m==='test'&&S.b!=='custom')?pickCover(p,n):p.slice(0,n);
+  if(m!=='cards'&&m!=='test'&&!(S.b==='exam'&&m==='test'))p=interleave(p);
   startQuiz(m,p);if(S.boss&&typeof Q!=='undefined'&&Q){Q.boss=true;}S.boss=false;
 }
 function interleave(ids){
@@ -2650,6 +2652,8 @@ function resultView(){
   if(!Q.test&&miss.length){h+='<div class="glass pad w"><div class="lab" style="margin-bottom:6px">Nochmal ansehen</div>';miss.forEach(function(id){h+=wordRow(id,true);});h+='</div>';}
   else if(!Q.test&&S.mode!=='cards')h+='<div class="glass pad w hint">Keine Fehler. Probier jetzt den Probetest, das ist die härteste Prüfung.</div>';
   if(Q.hist&&Q.hist.length){const lw=Q.hist[Q.hist.length-1];h+='<button class="glass gtap undob w" data-act="undo"><span class="ui"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 14L4 9l5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h10a6 6 0 010 12h-3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span><span class="ut"><b>Letztes Wort nochmal</b><small>'+(lw&&W[lw.id]?esc(W[lw.id][0]):'')+'</small></span></button>';}
+  const errN=errIds().length;
+  if(errN>=2)h+='<button class="btn full noprint" data-act="errround">🎯 Nur die '+errN+' Fehler üben</button>';
   h+='<div class="row2"><button class="btn" data-act="again">Nochmal</button><button class="btn pri" data-act="home">Zum Menü</button></div>';
   if(typeof S.b==='number'&&S.b<nb()-1)h+='<button class="btn full" data-act="nextblock">Nächste Liste</button>';
   return h;
@@ -2819,6 +2823,7 @@ function act(a,d){
   else if(a==='know'){submit(d.v==='1',true);}
   else if(a==='cont'){cont();}
   else if(a==='again'){begin(S.mode,S.free);}
+  else if(a==='errround'){const ids=errIds();if(ids.length<2){toast('Keine Fehler zum Üben.');return;}S.customIds=ids;S.b='custom';S.dir=S.dir||'mix';begin(S.mode==='cards'?'auto':(S.mode==='test'?'auto':S.mode),true);}
   else if(a==='free'){begin(S.mode,true);}
   else if(a==='nextblock'){S.b=S.b+1;begin(S.mode,false);}
   else if(a==='toadd'){setFrom();S.add.mode=(aiOK()&&AIIMG)?'scan':'paste';S.add.lang='auto';S.add.busy=false;S.add.found=null;S.add.err='';S.screen='add';render();}
