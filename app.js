@@ -20,7 +20,7 @@ const MODE={auto:{i:'🚀',t:'Smart-Training',d:'Dein persönlicher Trainer'},ca
 const app=document.getElementById('app');
 const KEY='gl-vokabeln-v2';
 const AGEL={kid:'bis 10',teen:'11–14',youth:'15–17',adult:'ab 18'};
-const DEF=function(){return {v:4,box:{},due:{},wrong:{},days:{},gd:{},hist:{},st:{ok:0,no:0},custom:[],exams:[],run:null,onb:0,dailyGoal:10,quizLength:10,flashcardCount:10,fontSize:'M',shuffleCards:true,autoNext:true,examSec:20,vA:'',vB:'',vC:'',sfx:true,mins:{},weekGoal:4,weekPaid:'',haptic:true,autoCloud:true,ease:{},newsV:0,coins:0,freeze:0,xp:0,xpBoostUntil:0,tokens:0,marathonDay:'',owned:{},nick:'',emoji:'',fedAt:0,avatar:'',boostUntil:0,coll:{},loginDay:'',look:'natural',ui:'play',accent:'green',frozen:{},goalPaid:'',avgSec:8,darkMode:null,remindersEnabled:false,remHour:17,speak:false,bg:'ice',bgMotion:true,lang2:'none',aiOn:true,glass:2,claimed:{},memo:{},aiCalls:0,aiDays:{},emo:'all',retP:90,wkJ:true,fs:{},q:{},use:{},prof:null,strictFrom:''};};
+const DEF=function(){return {v:4,box:{},due:{},wrong:{},days:{},gd:{},hist:{},st:{ok:0,no:0},custom:[],exams:[],run:null,onb:0,dailyGoal:10,quizLength:10,flashcardCount:10,fontSize:'M',shuffleCards:true,autoNext:true,examSec:20,vA:'',vB:'',vC:'',sfx:true,mins:{},weekGoal:4,weekPaid:'',haptic:true,autoCloud:true,ease:{},newsV:0,coins:0,freeze:0,xp:0,xpBoostUntil:0,tokens:0,marathonDay:'',owned:{},nick:'',emoji:'',fedAt:0,avatar:'',boostUntil:0,coll:{},loginDay:'',look:'natural',ui:'apple',accent:'green',frozen:{},goalPaid:'',avgSec:8,darkMode:null,remindersEnabled:false,remHour:17,speak:false,bg:'ice',bgMotion:true,lang2:'none',aiOn:true,glass:2,claimed:{},memo:{},aiCalls:0,aiDays:{},emo:'all',retP:90,wkJ:true,fs:{},q:{},use:{},prof:null,strictFrom:''};};
 const APP_NAME='EasyVocab';
 function mmq(q){try{return !!(window.matchMedia&&matchMedia(q).matches);}catch(e){return false;}}
 let P=DEF();
@@ -54,7 +54,8 @@ function vocabSwap138(){
 }
 function migrate(){
   let ch=false;
-  if(!P.playMig){P.playMig=1;P.ui='play';P.accent='green';}
+  if(!P.playMig){P.playMig=1;P.ui='apple';}
+  if(P.ui==='play')P.ui='apple';
   if(!P.bm144){P.bm144=1;P.bgMotion=false;}
   ['box','due'].forEach(function(f){Object.keys(P[f]).forEach(function(k){if(k.indexOf('|')<0){P[f][k+'|en']=P[f][k];P[f][k+'|de']=P[f][k];delete P[f][k];ch=true;}});});
   if(P.goal!==undefined){P.dailyGoal=nearest(P.goal,[5,10,20,50]);delete P.goal;ch=true;}
@@ -76,12 +77,15 @@ function swCol(c){if(!isDark())return c;if(c[0]>=240&&c[1]>=240)return [24,24,28
 function ptintCols(key,dk){const mix=function(a,b,t){return a.map(function(v,i){return Math.round(v*(1-t)+b[i]*t);});};
   if(key==='flat')return dk?{bg:[30,30,33],gl:[46,46,50]}:{bg:[255,255,255],gl:[242,242,247]};
   const c=(BGP[key]||BGP.ice).c[0];return dk?{bg:mix([12,12,15],c,0.30),gl:mix([26,26,31],c,0.38)}:{bg:mix([255,255,255],c,0.2),gl:mix([255,255,255],c,0.07)};}
+function palsel(){const L=PALS(),cur=P.pal||'auto';const one=function(k,lab,bg,ac){return '<button class="sw'+(cur===k?' on':'')+'" data-act="palpick" data-v="'+k+'" aria-label="Farbwelt '+lab+'"><i style="background:'+bg+';box-shadow:inset 0 0 0 1px rgba(128,128,128,.45)"><b style="display:block;width:46%;height:46%;margin:27% auto;border-radius:50%;background:'+ac+'"></b></i><span>'+lab+'</span></button>';};
+  return '<div class="swlab"><b>Farbwelt</b><small>Hintergrund, Karten, Knöpfe und Hell/Dunkel zusammen</small></div><div class="swrow bgrow">'+one('auto','Auto','linear-gradient(90deg,#F8FAFC 50%,#0F172A 50%)','#2563EB')+Object.keys(L).map(function(k){return one(k,L[k].n,L[k].bg,'rgb('+L[k].ac+')');}).join('')+'</div>';}
 function applyBg(){
   const el=document.documentElement;const nat=(P.look!=='vivid');el.setAttribute('data-look','natural');el.setAttribute('data-ui',(P.ui==='apple'||P.ui==='play')?'apple':'glass');el.setAttribute('data-play',P.ui==='play'?'1':'0');el.setAttribute('data-abg',P.abg==='weiss'?'weiss':'grau');el.setAttribute('data-bgk',nat?'natural':'vivid');el.setAttribute('data-emoanim',P.emoAnim?'1':'0');
   {const on=!!(P.ptint&&P.ptint!=='none'&&(BGP[P.ptint])&&(P.ui==='apple'||P.ui==='play'));el.setAttribute('data-ptint',on?'1':'0');if(on){const t=ptintCols(P.ptint,isDark());el.style.setProperty('--pbg','rgb('+t.bg.join(',')+')');el.style.setProperty('--pgl','rgb('+t.gl.join(',')+')');}}el.setAttribute('data-pal',BGP[P.bg]?P.bg:'ice');el.setAttribute('data-accent',['blue','poppy','mustard','green','rose'].indexOf(P.accent)>=0?P.accent:'blue');
   const p=nat?{c:isDark()?[[52,68,98],[62,64,96],[78,74,74]]:[[160,186,224],[192,202,228],[224,216,210]]}:(BGP[P.bg]||BGP.ice);const a=nat?(isDark()?[0.28,0.28,0.24]:[0.6,0.52,0.48]):(P.bg==='flat'?[0,0,0]:(isDark()?[0.5,0.45,0.4]:[0.55,0.45,0.4]));
   p.c.forEach(function(c,i){el.style.setProperty('--aur'+(i+1),'rgba('+c.join(',')+','+a[i]+')');el.style.setProperty('--o'+(i+1),'rgb('+(isDark()?(function(){const m=(c[0]+c[1]+c[2])/3;return c.map(function(v){return Math.max(0,Math.min(255,Math.round((m+(v-m)*1.7)*0.42)));});})():c).join(',')+')');});
   el.classList.toggle('still',!P.bgMotion);
+  {const pk=palKey(),c=PALS()[pk],sp=function(k,v){el.style.setProperty(k,v,'important');};el.setAttribute('data-pal2',pk);sp('--bg',c.bg);sp('--glass',c.gl);sp('--ink',c.ink);sp('--ink2',c.ink2);sp('--acc','rgb('+c.ac+')');sp('--accrgb',c.ac);sp('--accent','rgb('+c.ac+')');sp('--accent-soft','rgba('+c.ac+',.14)');}
 }
 function applyGlass(){
   const el=document.documentElement;const L=(P.glass==null?2:P.glass);const dark=isDark();el.setAttribute('data-glass',L);el.setAttribute('data-lm',dark?'0':'1');
@@ -295,7 +299,9 @@ function applyPrefs(){{const ab=ageBand();document.documentElement.classList.tog
   applyBg();
   applyGlass();
 }
-function isDark(){return (P.darkMode===null||P.darkMode===undefined)?window.matchMedia('(prefers-color-scheme: dark)').matches:!!P.darkMode;}
+function PALS(){return {fokus:{n:'Fokus',dk:0,bg:'#F8FAFC',gl:'#FFFFFF',ac:'37,99,235',ink:'#0F172A',ink2:'#64748B'},natur:{n:'Natur',dk:0,bg:'#F3F6F4',gl:'#FFFFFF',ac:'5,150,105',ink:'#064E3B',ink2:'#4B6B5E'},pop:{n:'Pop',dk:0,bg:'#F4F4F5',gl:'#FFFFFF',ac:'13,148,136',ink:'#18181B',ink2:'#52525B'},nacht:{n:'Nachteule',dk:1,bg:'#0F172A',gl:'#1E293B',ac:'99,102,241',ink:'#F8FAFC',ink2:'#CBD5E1'}};}
+function palKey(){const k=P.pal||'auto';const L=PALS();if(k==='auto'){try{return window.matchMedia('(prefers-color-scheme: dark)').matches?'nacht':'fokus';}catch(e){return 'fokus';}}return L[k]?k:'fokus';}
+function isDark(){return !!PALS()[palKey()].dk;}
 applyCustom();applyPrefs();
 const TABS=[{k:'menu',i:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11.2 12 4l8.5 7.2"/><path d="M5.5 9.8V20h13V9.8"/><path d="M10 20v-5.5h4V20"/></svg>',t:'Heute'},{k:'practice',i:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.6"/><circle cx="12" cy="12" r="1.1"/></svg>',t:'Üben'},{k:'planner',i:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',t:'Planer'},{k:'words',i:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.5A2 2 0 0 1 6.5 3.5H19.5v13H6.5a2 2 0 0 0-2 2z"/><path d="M4.5 18.5a2 2 0 0 0 2 2H19.5"/></svg>',t:'Wörter'},{k:'stats',i:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 20V12M12 20V4.5M18.5 20V9"/></svg>',t:'Statistik'}];
 function isRoot(s){return ['menu','practice','planner','words','stats'].indexOf(s)>=0;}
@@ -366,7 +372,7 @@ let AI=null,AIIMG=false;
 
 function hintOn(){if(P.hintBtn!=null)return !!P.hintBtn;const b=ageBand();return b==='kid'||b==='teen';}
 function ageBand(){if(P.age&&AGEL[P.age])return P.age;const p=P.prof;if(p){if(p.role==='schule'){const g=parseInt(p.grade,10)||0;return g<=6?'kid':(g<=9?'teen':'youth');}if(p.role==='uni'||p.role==='beruf'||p.role==='reisen')return 'adult';}return '';}
-function ageApply(b){const D={kid:{dailyGoal:5,quizLength:10,fontSize:'L',sfx:true,ui:'play'},teen:{dailyGoal:10,quizLength:10,fontSize:'M',ui:'play'},youth:{dailyGoal:15,quizLength:15,fontSize:'M',ui:'play'},adult:{dailyGoal:15,quizLength:15,fontSize:'M',ui:'apple'}}[b];if(!D)return;Object.keys(D).forEach(function(k){P[k]=D[k];});}
+function ageApply(b){const D={kid:{dailyGoal:5,quizLength:10,fontSize:'L',sfx:true,ui:'apple'},teen:{dailyGoal:10,quizLength:10,fontSize:'M',ui:'apple'},youth:{dailyGoal:15,quizLength:15,fontSize:'M',ui:'apple'},adult:{dailyGoal:15,quizLength:15,fontSize:'M',ui:'apple'}}[b];if(!D)return;Object.keys(D).forEach(function(k){P[k]=D[k];});}
 function profCtx(){const p=P.prof;if(!p)return '';const gr=parseInt(p.grade,10)||0;const who=p.role==='schule'?'Schüler/in, Klasse '+(p.grade||'?'):({uni:'Studierende/r oder Azubi',beruf:'berufstätig',reisen:'lernt für Reisen und Hobby'})[p.role]||'';const goal=({klausur:'bereitet bald eine Klausur vor',schule:'begleitet den Schulstoff',abi:'bereitet sich langfristig auf Abitur oder Prüfung vor',alltag:'will im Alltag sprechen können'})[p.goal]||'';const st=(p.styles||[]).map(function(x){return ({hear:'Hören und Sprechen',see:'Bilder',write:'Schreiben',play:'Spielen',fast:'kurze Runden'})[x];}).filter(Boolean).join(', ');const ab=ageBand();const tone=ab==='kid'?'Schreibe sehr einfach, mit ganz kurzen Sätzen, freundlich und ermutigend, für ein Kind bis 10 Jahre.':ab==='teen'?'Schreibe einfach, locker und motivierend, für Jugendliche von 11 bis 14.':ab==='adult'?'Schreibe sachlich und erwachsen, ohne Kindersprache.':(p.role==='schule'&&gr&&gr<=7)?'Schreibe sehr einfach, mit kurzen Sätzen und freundlich.':((p.role==='schule'&&gr>=11)||p.role==='uni'?'Schreibe sachlich und präzise.':'Schreibe klar und freundlich.');return ' [Kontext zum Lernenden: '+(P.nick?'Name '+P.nick+'. ':'')+who+(goal?', '+goal:'')+(st?'; lernt am liebsten mit: '+st:'')+'. '+tone+' Antworte trotzdem exakt im verlangten Format.]';}
 function aiOK(){return !!AI&&P.aiOn!==false;}
 function aiTrack(){P.aiCalls=(P.aiCalls||0)+1;const t=fmt(new Date());P.aiDays[t]=(P.aiDays[t]||0)+1;save();}
@@ -448,7 +454,7 @@ async function cloudCheck(){
   const f=await cloudPeek();CCHK=true;
   if(f&&(isFresh()||f.score>progScore(P)+5)){if(S.screen==='onb'&&!P.prof){P.onb=1;setCookieOnb();S.screen='menu';}S.cloudFound=f;if(isFresh())previewUi(f);render(true);}
 }
-const BUILD=154,BUILD_DATE='15.11.2026';
+const BUILD=156,BUILD_DATE='15.11.2026';
 const NEWS_LOG=[
 {b:133,t:[['🧭','Neu: Lernpfad pro Liste. Die Wörter einer Liste sind in kleine Stationen geteilt, du siehst immer den nächsten Schritt'],['🏠','Heute aufgeräumt: ein klarer Hauptknopf, kompaktes Tagesziel, Serie und Level ohne Doppelungen'],['🌍','Sprachen mit ganzem Namen und Flagge: Englisch, Französisch, Latein'],['📚','Wörterlisten übersichtlicher, Planer-Knopf bleibt sichtbar, Statistik ohne leere Kästen'],['🃏','Lernkarten größer, Fortschrittsbalken deutlicher, weniger Ablenkung in der Runde'],['🖼️','Einheitliche Symbole auf Heute und Üben'],['📱','Einstellungen auch auf dem iPad hochkant zweispaltig']]},
 {b:132,t:[['🧒','Neu für Kinder und Jugendliche: Wenn das Tagesziel geschafft ist, gibt es einen Sticker und ein kleines Fest. Die letzten Sticker stehen auf Heute'],['5️⃣','Neu auf Heute: „Nur 5 Wörter“ als kleiner Einstieg, wenn die Lust fehlt'],['🧹','Heute ist ruhiger: Wochenkarten, Liga und Shop-Hinweis sind unter „Mehr von heute“'],['📱','iPad hochkant zeigt Heute jetzt in zwei Spalten'],['📊','Statistik zeigt vor der ersten Runde einen freundlichen Hinweis statt leerer Flächen']]},
@@ -671,12 +677,11 @@ function onbView(){
     const dk=P.darkMode===null||P.darkMode===undefined?'auto':(P.darkMode?'dark':'light');
     const rm=P.remindersEnabled?String(P.remHour||17):'off';
     h+='<div class="obq">Aussehen und Ton</div><p class="hint" style="margin:0 6px">Alles ändert sich sofort. Du kannst es später in den Einstellungen anpassen.</p><div class="glass grp w">';
-    h+=srow('🌙','#374151','Design','',obSeg('dark',['auto','light','dark'],dk,{auto:'Auto',light:'Hell',dark:'Dunkel'}));
-    h+='<div class="swlab"><b>Akzentfarbe</b></div><div class="swrow">'+AC.map(function(a){return '<button class="sw'+((P.accent||'blue')===a[0]?' on':'')+'" data-act="obset" data-k="accent" data-v="'+a[0]+'" aria-label="Farbe '+a[0]+'"><i style="background:'+a[1]+'"></i></button>';}).join('')+'</div>';
+    h+=palsel();
     h+=srow('🔤','#6B7280','Schriftgröße','',obSeg('fsz',['S','M','L'],P.fontSize||'M',{S:'S',M:'M',L:'L'}));
     h+=srow('🔔','#FF375F','Töne','Richtig, Serie, Level',obSeg('snd',['on','off'],P.sfx?'on':'off',{on:'An',off:'Aus'}));
     h+=srow('🔊','#FF375F','Vorlesen','Bei jeder Frage',obSeg('spk',['on','off'],P.speak?'on':'off',{on:'An',off:'Aus'}));
-    h+=srow('⏰','#FF9500','Erinnerung','Uhrzeit, ab der der Hinweis kommt',obSeg('rem',['off','8','16','19'],rm,{off:'Aus','8':'8','16':'16','19':'19'}))+'</div>';
+    h+='</div>';
   }else{
     const sm=obSummary(o);
     h+='<div class="obh"><div class="big-ico">✨</div><h2>Fertig'+(o.name?', '+esc(o.name):'')+'. So habe ich es eingestellt:</h2></div><div class="glass pad w col tight">'+sm.map(function(x){return '<div class="obsum"><span>'+x[0]+'</span><b>'+x[1]+'</b></div>';}).join('')+'</div><p class="hint" style="margin:0 6px">Auch Claude richtet sich danach: Erklärungen, Beispielsätze und der Coach passen zu Klasse, Ziel und Lernstil. Alles lässt sich später unter Lernprofil ändern.</p>';
@@ -2876,7 +2881,7 @@ function plannerView(){
     h+='</div></div>';
     h+='<label class="chk" style="margin:4px 6px"><input type="checkbox" id="ex-focus" checked> Danach nur diese Listen üben (Lernfokus)</label>';
     if(S.formErr)h+='<div class="err" role="alert">'+esc(S.formErr)+'</div>';
-    h+='<div class="stickycta"><button class="btn pri full" data-act="addexam">Klausur speichern</button></div>';
+    h+='<button class="btn pri full" data-act="addexam" style="width:100%;margin-top:8px">Klausur speichern</button>';
   }
   return h;
 }
@@ -3068,7 +3073,7 @@ function feedbackView(){
   h+='<button class="btn pri full" data-act="fbsend">Teilen oder kopieren</button><p class="hint" style="margin:0">Dein Gerät öffnet das Teilen-Menü. Dort wählst du, wohin der Text geht, zum Beispiel Nachrichten oder Mail. Es wird nichts automatisch gesendet.</p></div>';
   return h;
 }
-const SETCAT=[['Wichtig','⭐','#FF9F0A',['Wichtig']],['Lernen','🎓','#FF9F0A',['Lernen']],['Üben','✏️','#5E5CE6',['Üben und Abfrage','KI']],['Aussehen','🎨','#8B5CF6',['Aussehen','Bedienungshilfen']],['Ton und Erinnerung','🔊','#FF375F',['Ton und Stimmen','Erinnerung']],['Konto und Daten','👤','#34C759',['Konto','Offline','Bericht','Daten']],['Hilfe und Info','❓','#30B0C7',['Hilfe und Info']]];
+const SETCAT=[['Wichtig','⭐','#FF9F0A',['Wichtig']],['Lernen','🎓','#FF9F0A',['Lernen']],['Üben','✏️','#5E5CE6',['Üben und Abfrage','KI']],['Aussehen','🎨','#8B5CF6',['Aussehen','Bedienungshilfen']],['Ton und Stimmen','🔊','#FF375F',['Ton und Stimmen']],['Konto und Daten','👤','#34C759',['Konto','Offline','Bericht','Daten']],['Hilfe und Info','❓','#30B0C7',['Hilfe und Info']]];
 function setCompose(cats,SUM,TOP){
   const by={};if(TOP)cats.unshift({t:'Wichtig',body:TOP,note:''});cats.forEach(function(c){by[c.t]=c;});
   const list=[];
@@ -3119,12 +3124,12 @@ function settingsView(){
   h+=sect('Offline',offRow());
   h+=sect('Bericht',srow('📨','#0A84FF','Wochenbericht senden','Für Eltern oder Lehrer: Lerntage, Wörter, Serie','<button class="btn sm" data-act="report">Senden</button>'));
   {const pl=P.ui==='play';const ap=P.ui==='apple'||pl;
-  const stil=srow('🍎','#111827','Stil',pl?'Kräftig, verspielt, mit dicken Knöpfen':(ap?'Ruhig und sachlich, ohne Schnickschnack':'Glas, Farbe und Tiefe'),segc('ui',['play','apple','glass'],P.ui==='play'?'play':(ap?'apple':'glass'),{play:'Spielerisch',apple:'Sachlich',glass:'Liquid Glass'}));
+  const stil=srow('🍎','#111827','Stil',pl?'Kräftig, verspielt, mit dicken Knöpfen':(ap?'Ruhig und sachlich, ohne Schnickschnack':'Glas, Farbe und Tiefe'),segc('ui',['apple','glass'],(ap?'apple':'glass'),{apple:'Sachlich',glass:'Liquid Glass'}));
   const ptsw=['none','flat'].concat(Object.keys(BGP).filter(function(k){return k!=='flat';})).map(function(k){const none=k==='none';const t=none?null:ptintCols(k,isDark());const lab=none?'Standard':(k==='flat'?(isDark()?'Grau':'Weiß'):BGP[k].n);const cur=(P.ptint||'none')===k;return '<button class="sw'+(cur?' on':'')+'" data-act="ptpick" data-v="'+k+'" aria-label="Seitenfarbe '+lab+'"><i style="background:'+(none?'var(--bg)':'rgb('+t.bg.join(',')+')')+';box-shadow:inset 0 0 0 1px rgba(128,128,128,.45)"></i><span>'+lab+'</span></button>';}).join('');
-  const farbe='<div class="swlab"><b>Akzentfarbe</b><small>Knöpfe, Schalter und Links</small></div><div class="swrow">'+acsw+'</div>'+((P.ui==='play'||P.ui==='apple')?'<div class="swlab"><b>Seitenfarbe</b><small>Hintergrund der ganzen App</small></div><div class="swrow bgrow">'+ptsw+'</div>':'');
+  const farbe='';
   const glasT=srow('🎨','#8B5CF6','Hintergrund','Farbe hinter dem Glas','')+'<div class="swrow bgrow">'+bgsw+'</div>'+srow('💧','#0A84FF','Glas','Stärke des Effekts',segc('glass',[0,1,2,3],P.glass==null?2:P.glass,{0:'Aus',1:'Dezent',2:'Normal',3:'Max'}))+srow('🌊','#64D2FF','Hintergrund bewegen','Langsam treibende Farben',tg('bgMotion',!!P.bgMotion));
   const appT=srow('⬜','#6B7280','Hintergrund','Grau wie iOS oder ganz weiß',segc('abg',['grau','weiss'],P.abg==='weiss'?'weiss':'grau',{grau:'Grau',weiss:'Weiß'}));
-  h+=sect('Aussehen',srow('🌙','#374151','Darstellung','',segc('dm',['light','dark','auto'],(P.darkMode===null||P.darkMode===undefined)?'auto':(P.darkMode?'dark':'light'),{light:'Hell',dark:'Dunkel',auto:'Auto'},'dmset'))+stil+farbe+(pl?'':(ap?appT:glasT)));}
+  h+=sect('Aussehen',palsel()+stil+farbe+(pl?'':(ap?appT:glasT)));}
   h+=sect('Bedienungshilfen',srow('🔤','#6B7280','Schriftgröße','Gilt für die ganze App',segc('fontSize',['S','M','L'],P.fontSize))+srow('🫧','#30B0C7','Weniger Bewegung','Ruhiger Bildschirm, schont den Akku',tg('calm',!!P.calm))+srow('🎞️','#5E5CE6','Animationen','Auto erkennt schwache Geräte. Aktuell: '+(document.documentElement.classList.contains('lite')?'sparsam':'voll'),segc('perf',['auto','off','on'],P.perf||'auto',{auto:'Auto',off:'Voll',on:'Sparsam'}))+more('bh','Weitere Optionen','Kontrast, Tippflächen',srow('🌓','#374151','Hoher Kontrast','Kräftigere Farben und Rahmen',tg('hc',!!P.hc))+srow('👆','#34C759','Größere Tippflächen','Knöpfe und Zeilen höher',tg('bigtap',!!P.bigtap))));
   const ints=(function(){const k=[P.dailyGoal,P.newMax==null?20:P.newMax,P.retP||90,P.weekGoal||4].join();return k==='5,5,80,3'?'easy':(k==='10,20,90,4'?'norm':(k==='20,40,95,5'?'hard':''));})();
   h+=sect('Lernen',srow('⚖️','#FF9F0A','Lernintensität','Setzt Tagesziel, neue Wörter, Behalten und Wochenziel zusammen',segc('intens',['easy','norm','hard'],ints,{easy:'Locker',norm:'Normal',hard:'Intensiv'},'intens'))+srow('🎯','#FF9F0A','Tagesziel','Wörter pro Tag',segc('dailyGoal',[5,10,20,50],P.dailyGoal))+srow('🏖️','#5AC8FA','Wochenende frei','Samstag und Sonntag brechen die Serie nicht',tg('wkJ',P.wkJ!==false))+srow('🧭','#5E5CE6','Lernprofil',(P.prof?'Anpassen, was die App für dich einstellt':'Fragen zu dir und deinem Lernstil'),'<button class="btn sm" data-act="profedit">'+(P.prof?'Ändern':'Starten')+'</button>')+more('lern','Experte','Neue Wörter, Wochenziel, Behalten, Sprache, Alter, Notenschlüssel'+(Object.keys(P.hid||{}).length?', ausgeblendete Wörter':''),srow('🪄','#5E5CE6','Vorschläge beim Hinzufügen','Holt Übersetzung und Beispiel online, sobald du ein Wort eintippst',tg('autoSug',P.autoSug!==false))+srow('🌱','#34C759','Neue Wörter pro Tag','Mehr neue Wörter auf einmal werden schnell vergessen',segc('newMax',[5,10,20,40,0],P.newMax==null?20:P.newMax,{0:'Aus'}))+srow('📆','#5AC8FA','Wochenziel','Lerntage pro Woche',segc('weekGoal',[2,3,4,5,6,7],P.weekGoal||4))+srow('🧠','#34C759','Behalten','Höher heißt mehr Wiederholungen. 90 % ist ein guter Standard.',segc('retP',[80,90,95],P.retP||90,{80:'80 %',90:'90 %',95:'95 %'}))+srow('🌍','#34C759','Zusatzsprache','Französisch oder Latein',segc('lang2',['none','fr','la'],P.lang2,{none:'Keine',fr:'Französisch',la:'Latein'}))+(P.lang2!=='none'?srow('✨','#FF6B8B','Beispielwörter','20 Wörter zum Ausprobieren','<button class="btn sm" data-act="starter" data-k="'+P.lang2+'">Laden</button>'):'')+srow('🎂','#FF9F0A','Alter','Passt Tempo, Ton und Aufgaben an',segc('age',['kid','teen','youth','adult'],ageBand(),AGEL))+srow('🎓','#FF9F0A','Notenschlüssel',gkey().join(' / ')+' Prozent für Note 1 bis 5','<button class="btn sm" data-act="gkeyedit">Ändern</button>')+(Object.keys(P.hid||{}).length?srow('🚫','#8E8E93','Ausgeblendete Wörter',Object.keys(P.hid).length+' Wörter werden nicht mehr abgefragt','<button class="btn sm" data-act="unhideall">Alle zurückholen</button>'):'')));
@@ -3132,7 +3137,6 @@ function settingsView(){
   if(!isHosted())h+=sect('KI',srow('✨','#FF6B8B','KI-Funktionen',AI?'Heute '+((P.aiDays&&P.aiDays[fmt(new Date())])||0)+' Anfragen · nur auf Knopfdruck':'In dieser Ansicht nicht verfügbar',tg('aiOn',P.aiOn!==false)));
   const ev=enVoices();const good=ev.filter(function(v){return vQual(v)!=='Standard';}).length;
   h+=sect('Ton und Stimmen',srow('🔊','#FF375F','Vorlesen','Automatisch bei jeder Frage',tg('speak',!!P.speak))+vsel('vc','🎙️','#FF375F','Stimme',P.vC,'c')+srow('🔔','#34C759','Töne und Vibration','Kurze Rückmeldung bei richtig und falsch',(function(){const on=!!P.sfx||P.haptic!==false;return '<button class="tg'+(on?' on':'')+'" role="switch" aria-checked="'+(on?'true':'false')+'" data-act="sndall" data-v="'+(on?'false':'true')+'"></button>';})())+more('ton','Weitere Optionen','Podcast-Stimmen, Ton testen',vsel('va','🎙️','#5AC8FA','Podcast: Stimme A',P.vA,'a')+vsel('vb','🎙️','#34C759','Podcast: Stimme B',P.vB,'b')+((enVoicesAll().length>ev.length||P.allVs)?srow('🗂️','#8E8E93','Alle Stimmen zeigen','Auch einfache Stimmen anzeigen',tg('allVs',!!P.allVs)):'')+srow('🎧','#A2845E','Ton testen',S.diag||'Prüft, ob dein Gerät vorlesen kann','<button class="btn sm" data-act="speaktest">Test</button>')),ev.length?(good?good+' hochwertige Stimmen gefunden. Sie stehen oben in der Liste.':'Nur Standard-Stimmen gefunden. Lade am iPad unter Einstellungen > Bedienungshilfen > Gesprochene Inhalte > Stimmen > Englisch eine Premium-Stimme.'):'Auf diesem Gerät gibt es keine englischen Stimmen.');
-  h+=sect('Erinnerung',srow('🔔','#FF9500','Erinnerung','Banner in der App bei Streak-Gefahr. Meldungen von außen folgen mit Konto.',tg('remindersEnabled',!!P.remindersEnabled))+(P.remindersEnabled?srow('🕔','#FFB340','Ab Uhrzeit','Banner erscheint ab dieser Uhrzeit',segc('remHour',[15,17,19,21],P.remHour||17,{15:'15',17:'17',19:'19',21:'21'})):''));
   let dat=srow('🗂️','#0A84FF','Sicherung als Datei','Zuletzt: '+ago(P.lastBackup),'<button class="btn sm pri" data-act="evbackup">Speichern</button>')+srow('📂','#34C759','Aus Datei laden','Holt deinen Stand zurück','<label class="btn sm" for="evfile">Datei wählen</label><input id="evfile" class="vh" type="file" accept=".txt,.json,text/plain,application/json">')+srow('💾','#8E8E93','Speicher',evBytes(evDataSize())+' Lerndaten · Auto-Kopie '+(P.snapAt?ago(P.snapAt):'noch nie'),'');
   let dmore=srow('📤','#0A84FF','Sicherung kopieren','Als Text, falls Dateien nicht gehen','<button class="btn sm" data-act="copy">Kopieren</button>')+srow('📥','#34C759','Sicherung einfügen','Holt deinen Stand zurück','<button class="btn sm" data-act="paste">Einfügen</button>');
   if(S.bk)dmore+='<div class="paste"><p class="sn" style="padding:0">Kopieren wurde blockiert. Markiere den Text und kopiere ihn selbst.</p><textarea id="bk" class="ta" readonly rows="3" aria-label="Sicherung">'+esc(S.bk)+'</textarea></div>';
@@ -3542,6 +3546,7 @@ function act(a,d){
   else if(a==='gkeyedit'){const r=window.prompt('Prozentgrenzen für Note 1 bis 5, mit Komma getrennt. Beispiel: 92,81,67,50,30',gkey().join(','));if(r!==null){const v=r.split(/[,; ]+/).map(Number).filter(function(x){return x>0&&x<100;});if(v.length===5&&v.every(function(x,i){return i===0||x<v[i-1];})){P.gkey=v;save();toast('Notenschlüssel gespeichert.');render(true);}else toast('Bitte fünf fallende Zahlen angeben, zum Beispiel 92,81,67,50,30.');}}
   else if(a==='profedit'){obInit(true);S.screen='onb';render();}
   else if(a==='obset'){const o=S.ob;if(!o)return;const k=d.k;
+    if(k==='pal'){P.pal=d.v;save();applyPrefs();render(true);return;}
     if(k==='dark'){P.darkMode=d.v==='auto'?null:(d.v==='dark');save();applyPrefs();render(true);return;}
     if(k==='accent'){P.accent=d.v;save();applyPrefs();render(true);return;}
     if(k==='fsz'){P.fontSize=d.v;save();applyPrefs();render(true);return;}
@@ -3922,6 +3927,7 @@ function act(a,d){
   else if(a==='dprint'){dictPrint();}
   else if(a==='dcsv'){evDownload(dictCsv(),'EasyVocab-Woerterbuch-'+fmt(new Date())+'.csv');}
   else if(a==='dcopy'){const t=dictText();try{navigator.clipboard.writeText(t).then(function(){toast('Kopiert.');}).catch(function(){S.dshare=t;render(true);});}catch(e){S.dshare=t;render(true);}}
+  else if(a==='palpick'){P.pal=d.v;save();applyPrefs();render(true);}
   else if(a==='ptpick'){P.ptint=d.v;save();applyBg();render(true);}
   else if(a==='emomode'){const v=d.v;P.emo=v==='off'?'off':'all';P.emoAnim=v==='anim';save();applyBg();render(true);}
   else if(a==='set'){P[d.key]=pv(d.v);if(d.key==='age'){ageApply(P.age);toast('Angepasst: Ziel, Schrift und Stil passen jetzt zum Alter.');}if(d.key==='lang2'){BC=null;}if(d.key==='darkMode'){P.darkMode=pv(d.v);}save();applyPrefs();render(true);}
